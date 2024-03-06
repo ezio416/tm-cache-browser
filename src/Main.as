@@ -8,18 +8,6 @@ bool         reading      = false;
 const float  scale        = UI::GetScale();
 const string title        = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
-[Setting category="General" name="Enabled"]
-bool S_Enabled = true;
-
-[Setting category="General" name="Show/hide with game UI"]
-bool S_HideWithGame = true;
-
-[Setting category="General" name="Show/hide with Openplanet UI"]
-bool S_HideWithOP = false;
-
-void Main() {
-}
-
 void RenderMenu() {
     if (UI::MenuItem(title, "", S_Enabled))
         S_Enabled = !S_Enabled;
@@ -84,7 +72,6 @@ void ReadChecksumFile() {
 
     XML::Document doc(xml);
     XML::Node cache = doc.Root().FirstChild();
-
     XML::Node node = cache.FirstChild();
     packs.InsertLast(Pack(node));
 
@@ -100,27 +87,4 @@ void ReadChecksumFile() {
     trace("reading checksum file done! (" + packs.Length + " packs)");
 
     reading = false;
-}
-
-class Pack {
-    string checksum;
-    string file;
-    string lastuse;
-    string name;
-    string root;
-    uint   size;
-
-    Pack() { }
-    Pack(XML::Node node) {
-        checksum = node.Child("checksum").Content();
-        file     = node.Child("file").Content();
-        lastuse  = node.Child("lastuse").Content();
-        name     = node.Child("name").Content();
-        root     = node.Child("root").Content();
-        size     = Text::ParseUInt(node.Child("size").Content());
-    }
-}
-
-string GetSizeMB(uint size, uint precision = 1) {
-    return Text::Format("%." + precision + "f", float(size) / 1048576) + "MB";
 }
