@@ -4,11 +4,11 @@
 const string[] extensionsImage = { "dds", "gif", "jpeg", "jpg", "png", "webp" };
 
 enum FileType {
-    Unknown,
     GameBox,
     Image,
     Map,
     Replay,
+    Unknown,
     Zip
 }
 

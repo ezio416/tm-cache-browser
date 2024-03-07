@@ -4,9 +4,12 @@
 bool         developer       = false;
 const string programDataPath = "C:/ProgramData/Trackmania/";
 const string cachePath       = programDataPath + "Cache/";
+uint         cacheUsage      = 0;
 const string checksumFile    = programDataPath + "checksum.txt";
 Pack@[]      packs;
+Pack@[]      packsSorted;
 bool         reading         = false;
+const vec4   rowBgAltColor   = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 const float  scale           = UI::GetScale();
 const string title           = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
@@ -30,8 +33,12 @@ void Render() {
         return;
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::None);
+        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeMB(cacheUsage) + ")"))
+            startnew(ReadCacheUsage);
+
         UI::BeginDisabled(reading);
-        if (UI::Button(Icons::File + " Read Checksum File (" + packs.Length + " packs)"))
+        UI::SameLine();
+        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " packs)"))
             startnew(ReadChecksumFile);
         UI::EndDisabled();
 
@@ -43,8 +50,8 @@ void Render() {
         if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Folder"))
             OpenExplorerPath(IO::FromUserGameFolder(""));
 
-        if (UI::BeginTable("##packs-table", developer ? 6 : 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY)) {
-            UI::PushStyleColor(UI::Col::TableRowBgAlt, vec4(0.0f, 0.0f, 0.0f, 0.5f));
+        if (UI::BeginTable("##packs-table", developer ? 6 : 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
+            UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
 
             UI::TableSetupScrollFreeze(0, 1);
             UI::TableSetupColumn("type",     UI::TableColumnFlags::WidthFixed, scale * 65.0f);
@@ -56,10 +63,31 @@ void Render() {
             UI::TableSetupColumn("name");
             UI::TableHeadersRow();
 
-            UI::ListClipper clipper(packs.Length);
+            UI::TableSortSpecs@ tableSpecs = UI::TableGetSortSpecs();
+
+            if (tableSpecs !is null && tableSpecs.Dirty) {
+                UI::TableColumnSortSpecs[]@ colSpecs = tableSpecs.Specs;
+
+                if (colSpecs !is null && colSpecs.Length > 0) {
+                    bool ascending = colSpecs[0].SortDirection == UI::SortDirection::Ascending;
+
+                    if (colSpecs[0].ColumnIndex == 0)
+                        sortMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
+                    else if (colSpecs[0].ColumnIndex == 1)
+                        sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
+                    else if (colSpecs[0].ColumnIndex == (developer ? 5 : 4))
+                        sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+
+                    startnew(SortPacks);
+                }
+
+                tableSpecs.Dirty = false;
+            }
+
+            UI::ListClipper clipper(packsSorted.Length);
             while (clipper.Step()) {
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    Pack@ pack = packs[i];
+                    Pack@ pack = packsSorted[i];
 
                     UI::TableNextRow();
 
@@ -103,6 +131,18 @@ void Render() {
     UI::End();
 }
 
+// courtesy of "4GB Cache" - https://github.com/XertroV/tm-4gb-cache
+void ReadCacheUsage() {
+    cacheUsage = 0;
+
+    try {
+        CSystemFidsFolder@ cache = Fids::GetProgramDataFolder("Cache");
+        cacheUsage = MeasureFidSizes(cache);
+    } catch {
+        error("error getting cache size: " + getExceptionInfo());
+    }
+}
+
 void ReadChecksumFile() {
     if (reading)
         return;
@@ -142,6 +182,8 @@ void ReadChecksumFile() {
     }
 
     trace("reading checksum file done! (" + packs.Length + " packs)");
+
+    startnew(SortPacks);
 
     reading = false;
 }
