@@ -1,27 +1,31 @@
 // c 2024-03-06
 // m 2024-03-06
 
-bool         developer       = false;
-const string programDataPath = "C:/ProgramData/Trackmania/";
-const string cachePath       = programDataPath + "Cache/";
-uint         cacheUsage      = 0;
-const string checksumFile    = programDataPath + "checksum.txt";
-bool         dirty           = false;
+bool         developer     = false;
+string       programDataPath;
+string       cachePath;
+uint         cacheUsage    = 0;
+string       checksumFile;
+bool         dirty         = false;
 UI::Texture@ image;
 string       imageExtension;
-vec2         imageSize       = vec2(0.0f, 0.0f);
-bool         imageWindow     = false;
+vec2         imageSize     = vec2(0.0f, 0.0f);
+bool         imageWindow   = false;
 Pack@[]      packs;
 Pack@[]      packsSorted;
-bool         reading         = false;
-const vec4   rowBgAltColor   = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const float  scale           = UI::GetScale();
-const string title           = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
+bool         reading       = false;
+const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const float  scale         = UI::GetScale();
+const string title         = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
 void Main() {
 #if SIG_DEVELOPER
     developer = true;
 #endif
+
+    programDataPath = string(Fids::GetProgramDataFolder("").FullDirName).Replace("\\", "/");
+    cachePath = programDataPath + "Cache/";
+    checksumFile = programDataPath + "checksum.txt";
 }
 
 void RenderMenu() {
