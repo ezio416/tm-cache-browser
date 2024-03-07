@@ -4,7 +4,7 @@
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
 string GetSizeMB(uint size, uint precision = 1) {
-    return Text::Format("%." + precision + "f", float(size) / 1048576.0f) + "MB";
+    return Text::Format("%." + precision + "f", float(size) / 1048576.0f) + " MB";
 }
 
 // courtesy of MisfitMaid
