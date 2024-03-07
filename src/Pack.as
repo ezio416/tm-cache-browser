@@ -59,46 +59,49 @@ class Pack {
 
         string[]@ parts = file.Split(".");
 
-        if (parts.Length > 0) {
-            extension = parts[parts.Length - 1].ToLower();
+        if (parts.Length == 0)
+            return;
 
-            if (extensionsArchive.Find(extension) > -1)
-                type = FileType::Archive;
-            else if (extensionsAudio.Find(extension) > -1)
-                type = FileType::Audio;
-            else if (extension == "gbx") {
-                type = FileType::GameBox;
+        extension = parts[parts.Length - 1].ToLower();
 
-                if (parts.Length > 1) {
-                    string gbxType = parts[parts.Length - 2].ToLower();
+        if (extensionsArchive.Find(extension) > -1)
+            type = FileType::Archive;
+        else if (extensionsAudio.Find(extension) > -1)
+            type = FileType::Audio;
+        else if (extension == "gbx") {
+            type = FileType::GameBox;
 
-                    if (gbxType == "block")
-                        type = FileType::Block;
-                    else if (gbxType == "fidcache")
-                        type = FileType::FidCache;
-                    else if (gbxType == "item")
-                        type = FileType::Item;
-                    else if (gbxType == "macroblock")
-                        type = FileType::Macroblock;
-                    else if (gbxType == "map")
-                        type = FileType::Map;
-                    else if (gbxType == "mat")
-                        type = FileType::Material;
-                    else if (gbxType == "profile")
-                        type = FileType::Profile;
-                    else if (gbxType == "replay")
-                        type = FileType::Replay;
-                    else if (gbxType == "scores")
-                        type = FileType::Scores;
-                    else if (gbxType == "systemconfig")
-                        type = FileType::SystemConfig;
-                }
-            } else if (extensionsImage.Find(extension) > -1)
-                type = FileType::Image;
-            else if (extensionsText.Find(extension) > -1)
-                type = FileType::Text;
-            else if (extensionsVideo.Find(extension) > -1)
-                type = FileType::Video;
-        }
+            if (parts.Length == 1)
+                return;
+
+            string gbxType = parts[parts.Length - 2].ToLower();
+
+            if (gbxType == "block")
+                type = FileType::Block;
+            else if (gbxType == "fidcache")
+                type = FileType::FidCache;
+            else if (gbxType == "item")
+                type = FileType::Item;
+            else if (gbxType == "macroblock")
+                type = FileType::Macroblock;
+            else if (gbxType == "map")
+                type = FileType::Map;
+            else if (gbxType == "mat")
+                type = FileType::Material;
+            else if (gbxType == "profile")
+                type = FileType::Profile;
+            else if (gbxType == "replay")
+                type = FileType::Replay;
+            else if (gbxType == "scores")
+                type = FileType::Scores;
+            else if (gbxType == "systemconfig")
+                type = FileType::SystemConfig;
+
+        } else if (extensionsImage.Find(extension) > -1)
+            type = FileType::Image;
+        else if (extensionsText.Find(extension) > -1)
+            type = FileType::Text;
+        else if (extensionsVideo.Find(extension) > -1)
+            type = FileType::Video;
     }
 }
