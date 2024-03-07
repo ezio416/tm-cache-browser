@@ -43,9 +43,9 @@ class Pack {
     Pack() { }
     Pack(XML::Node node) {
         checksum = node.Child("checksum").Content();
-        file     = node.Child("file").Content();
+        file     = node.Child("file").Content().Replace("\\", "/");
         lastuse  = node.Child("lastuse").Content();
-        name     = node.Child("name").Content();
+        name     = node.Child("name").Content().Replace("\\", "/");
         root     = node.Child("root").Content();
         size     = Text::ParseUInt(node.Child("size").Content());
 
