@@ -189,4 +189,6 @@ void ReadChecksumFile() {
 
     dirty = true;
     reading = false;
+
+    startnew(ReadCacheUsage);
 }
