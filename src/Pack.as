@@ -43,7 +43,7 @@ class Pack {
     Pack() { }
     Pack(XML::Node node) {
         checksum = node.Child("checksum").Content();
-        file     = node.Child("file").Content().Replace("\\", "/");
+        file     = node.Child("file").Content();
         lastuse  = node.Child("lastuse").Content();
         name     = node.Child("name").Content().Replace("\\", "/");
         root     = node.Child("root").Content();
