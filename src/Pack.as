@@ -1,19 +1,33 @@
 // c 2024-03-06
 // m 2024-03-06
 
-const string[] extensionsImage = { "dds", "gif", "jpeg", "jpg", "png", "webp" };
+const string[] extensionsArchive = { "7z", "gz", "rar", "tar", "zip" };
+const string[] extensionsAudio   = { "aac", "aiff", "alac", "flac", "m4a", "mp3", "mux", "ogg", "wav", "wma" };
+const string[] extensionsImage   = { "bmp", "dds", "exr", "gif", "heif", "jpeg", "jpg", "tiff", "png", "svg", "tga", "webp" };
+const string[] extensionsVideo   = { "avchd", "avi", "drc", "flv", "gifv", "m2ts", "mkv", "mov", "mp4", "mts", "ogv", "qt", "ts", "vob", "webm", "wmv" };
 
 enum FileType {
+    Archive,
+    Audio,
+    Block,
+    FidCache,
     GameBox,
     Image,
+    Item,
+    Macroblock,
     Map,
+    Material,
+    Profile,
     Replay,
+    Scores,
+    SystemConfig,
     Unknown,
-    Zip
+    Video
 }
 
 class Pack {
     string   checksum;
+    string   extension;
     string   file;
     string   lastuse;
     string   lastuseIso;
@@ -44,23 +58,43 @@ class Pack {
         string[]@ parts = file.Split(".");
 
         if (parts.Length > 0) {
-            string extension = parts[parts.Length - 1].ToLower();
+            extension = parts[parts.Length - 1].ToLower();
 
-            if (extension == "gbx") {
+            if (extensionsArchive.Find(extension) > -1)
+                type = FileType::Archive;
+            else if (extensionsAudio.Find(extension) > -1)
+                type = FileType::Audio;
+            else if (extension == "gbx") {
                 type = FileType::GameBox;
 
                 if (parts.Length > 1) {
                     string gbxType = parts[parts.Length - 2].ToLower();
 
-                    if (gbxType == "map")
+                    if (gbxType == "block")
+                        type = FileType::Block;
+                    else if (gbxType == "fidcache")
+                        type = FileType::FidCache;
+                    else if (gbxType == "item")
+                        type = FileType::Item;
+                    else if (gbxType == "macroblock")
+                        type = FileType::Macroblock;
+                    else if (gbxType == "map")
                         type = FileType::Map;
+                    else if (gbxType == "mat")
+                        type = FileType::Material;
+                    else if (gbxType == "profile")
+                        type = FileType::Profile;
                     else if (gbxType == "replay")
                         type = FileType::Replay;
+                    else if (gbxType == "scores")
+                        type = FileType::Scores;
+                    else if (gbxType == "systemconfig")
+                        type = FileType::SystemConfig;
                 }
             } else if (extensionsImage.Find(extension) > -1)
                 type = FileType::Image;
-            else if (extension == "zip")
-                type = FileType::Zip;
+            else if (extensionsVideo.Find(extension) > -1)
+                type = FileType::Video;
         }
     }
 }

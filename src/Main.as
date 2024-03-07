@@ -7,6 +7,10 @@ const string cachePath       = programDataPath + "Cache/";
 uint         cacheUsage      = 0;
 const string checksumFile    = programDataPath + "checksum.txt";
 bool         dirty           = false;
+UI::Texture@ image;
+string       imageExtension;
+vec2         imageSize       = vec2(0.0f, 0.0f);
+bool         imageWindow     = false;
 Pack@[]      packs;
 Pack@[]      packsSorted;
 bool         reading         = false;
@@ -35,7 +39,7 @@ void Render() {
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::None);
         UI::BeginDisabled(reading);
-        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Items)"))
+        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Packs)"))
             startnew(ReadChecksumFile);
         UI::EndDisabled();
 
@@ -115,20 +119,48 @@ void Render() {
                     if (developer) {
                         UI::TableNextColumn();
                         if (pack.path.Length > 0 && UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.checksum, false)) {
-                            CSystemFidFile@ file;
+                            CSystemFidFile@ fid;
 
                             if (pack.file.StartsWith("Cache"))
-                                @file = Fids::GetProgramData(pack.file);
+                                @fid = Fids::GetProgramData(pack.file);
                             else
-                                @file = Fids::GetUser(pack.file);
+                                @fid = Fids::GetUser(pack.file);
 
-                            CMwNod@ nod = Fids::Preload(file);
+                            CMwNod@ nod = Fids::Preload(fid);
                             ExploreNod(nod);
                         }
                     }
 
                     UI::TableNextColumn();
-                    UI::Text(pack.name);
+                    if (pack.type == FileType::Image) {
+                        if (UI::Selectable(pack.name, false)) {
+                            IO::File file(pack.path, IO::FileMode::Read);
+                            try {
+                                @image = UI::LoadTexture(file.Read(file.Size()));
+                            } catch {
+                                warn("reading image file failed: " + pack.path);
+                            }
+                            file.Close();
+
+                            imageExtension = pack.extension.ToUpper();
+
+                            CSystemFidFile@ fid;
+
+                            if (pack.file.StartsWith("Cache"))
+                                @fid = Fids::GetProgramData(pack.file);
+                            else
+                                @fid = Fids::GetUser(pack.file);
+
+                            CPlugFileImg@ img = cast<CPlugFileImg@>(Fids::Preload(fid));
+                            if (img !is null)
+                                imageSize = vec2(float(img.Width), float(img.Height));
+                            else {
+                                warn("null image from fid: " + pack.path);
+                                imageSize = vec2(512.0f, 512.0f);
+                            }
+                        }
+                    } else
+                        UI::Text(pack.name);
                 }
             }
 
@@ -137,6 +169,21 @@ void Render() {
         }
 
     UI::End();
+
+    if (image !is null) {
+        imageWindow = true;
+
+        UI::Begin(title + " (" + imageExtension + " Image " + uint(imageSize.x) + "x" + uint(imageSize.y) + ")###" + title + "-image", imageWindow, UI::WindowFlags::AlwaysAutoResize);
+            if (imageExtension == "DDS") {
+                UI::Text("DDS image file not supported");
+                UI::Dummy(imageSize);
+            } else
+                UI::Image(image, imageSize);
+        UI::End();
+
+        if (!imageWindow)
+            @image = null;
+    }
 }
 
 // courtesy of "4GB Cache" - https://github.com/XertroV/tm-4gb-cache
