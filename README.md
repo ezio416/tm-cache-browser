@@ -2,7 +2,9 @@
 ![Game Trackmania](https://img.shields.io/badge/Game-Trackmania-blue)
 # Cache Browser
 
-Lets you easily browse the files in Trackmania's cache.
+Lets you easily browse the files in Trackmania's cache. Also preview some files (currently only images) right in-game!
+
+For developers, you may explore nods of cached items.
 
 <!-- ![Signed](https://img.shields.io/badge/Signed-Yes-00AA00) -->
 <!-- ![Signed](https://img.shields.io/badge/Signed-School_Mode-CC1199) -->
