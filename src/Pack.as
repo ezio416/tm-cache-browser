@@ -52,7 +52,7 @@ class Pack {
         lastuseIso = lastuse.SubStr(6, 4) + "-" + lastuse.SubStr(3, 2) + "-" + lastuse.SubStr(0, 2) + " " + lastuse.SubStr(11, 2) + ":" + lastuse.SubStr(14, 2) + ":00";
         lastuseUnix = IsoToUnix(lastuseIso);
 
-        if (file.StartsWith("Maps\\") || file.StartsWith("Skins\\"))
+        if (file.StartsWith("Maps\\") || file.StartsWith("Skins\\") || file.StartsWith("Media\\"))
             path = IO::FromUserGameFolder(file).Replace("\\", "/");
         else if (file.StartsWith("Cache\\"))
             path = programDataPath + file.Replace("\\", "/");
