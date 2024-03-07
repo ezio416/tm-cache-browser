@@ -127,7 +127,10 @@ void Render() {
                                 @fid = Fids::GetUser(pack.file);
 
                             CMwNod@ nod = Fids::Preload(fid);
-                            ExploreNod(nod);
+                            if (nod !is null)
+                                ExploreNod(nod);
+                            else
+                                warn("null nod: " + pack.path);
                         }
                     }
 
