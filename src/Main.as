@@ -48,8 +48,12 @@ void Render() {
             OpenExplorerPath(cachePath);
 
         UI::SameLine();
-        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Folder"))
+        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania User Folder"))
             OpenExplorerPath(IO::FromUserGameFolder(""));
+
+        UI::SameLine();
+        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder"))
+            OpenExplorerPath(IO::FromAppFolder(""));
 
         if (UI::BeginTable("##packs-table", developer ? 6 : 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
             UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
