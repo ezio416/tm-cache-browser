@@ -4,6 +4,7 @@
 const string[] extensionsArchive = { "7z", "gz", "rar", "tar", "zip" };
 const string[] extensionsAudio   = { "aac", "aiff", "alac", "flac", "m4a", "mp3", "mux", "ogg", "wav", "wma" };
 const string[] extensionsImage   = { "bmp", "dds", "exr", "gif", "heif", "jpeg", "jpg", "tiff", "png", "svg", "tga", "webp" };
+const string[] extensionsText    = { "as", "ini", "json", "log", "md", "toml", "txt", "xml" };
 const string[] extensionsVideo   = { "avchd", "avi", "drc", "flv", "gifv", "m2ts", "mkv", "mov", "mp4", "mts", "ogv", "qt", "ts", "vob", "webm", "wmv" };
 
 enum FileType {
@@ -21,6 +22,7 @@ enum FileType {
     Replay,
     Scores,
     SystemConfig,
+    Text,
     Unknown,
     Video
 }
@@ -93,6 +95,8 @@ class Pack {
                 }
             } else if (extensionsImage.Find(extension) > -1)
                 type = FileType::Image;
+            else if (extensionsText.Find(extension) > -1)
+                type = FileType::Text;
             else if (extensionsVideo.Find(extension) > -1)
                 type = FileType::Video;
         }
