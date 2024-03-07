@@ -16,11 +16,13 @@ class Pack {
     string   checksum;
     string   file;
     string   lastuse;
+    string   lastuseIso;
+    uint     lastuseUnix = 0;
     string   name;
     string   path;
     string   root;
     uint     size;
-    FileType type = FileType::Unknown;
+    FileType type        = FileType::Unknown;
 
     Pack() { }
     Pack(XML::Node node) {
@@ -30,6 +32,9 @@ class Pack {
         name     = node.Child("name").Content();
         root     = node.Child("root").Content();
         size     = Text::ParseUInt(node.Child("size").Content());
+
+        lastuseIso = lastuse.SubStr(6, 4) + "-" + lastuse.SubStr(3, 2) + "-" + lastuse.SubStr(0, 2) + " " + lastuse.SubStr(11, 2) + ":" + lastuse.SubStr(14, 2) + ":00";
+        lastuseUnix = IsoToUnix(lastuseIso);
 
         if (file.StartsWith("Maps\\") || file.StartsWith("Skins\\"))
             path = IO::FromUserGameFolder(file).Replace("\\", "/");

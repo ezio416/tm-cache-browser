@@ -24,6 +24,14 @@ int LargestFirst(Pack@ p1, Pack@ p2) {
     return Math::Clamp(int(p2.size) - int(p1.size), -1, 1);
 }
 
+int OldestFirst(Pack@ p1, Pack@ p2) {
+    return Math::Clamp(int(p1.lastuseUnix) - int(p2.lastuseUnix), -1, 1);
+}
+
+int NewestFirst(Pack@ p1, Pack@ p2) {
+    return Math::Clamp(int(p2.lastuseUnix) - int(p1.lastuseUnix), -1, 1);
+}
+
 int NameAlpha(Pack@ p1, Pack@ p2) {
     string n1 = p1.name.ToLower();
     string n2 = p2.name.ToLower();
@@ -51,6 +59,8 @@ enum SortMethod {
     TypeAlphaRev,
     SmallestFirst,
     LargestFirst,
+    OldestFirst,
+    NewestFirst,
     NameAlpha,
     NameAlphaRev,
 }
@@ -60,6 +70,8 @@ SortFunc@[] sortFunctions = {
     TypeAlphaRev,
     SmallestFirst,
     LargestFirst,
+    OldestFirst,
+    NewestFirst,
     NameAlpha,
     NameAlphaRev,
 };

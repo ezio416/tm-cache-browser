@@ -54,12 +54,12 @@ void Render() {
             UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
 
             UI::TableSetupScrollFreeze(0, 1);
-            UI::TableSetupColumn("type",     UI::TableColumnFlags::WidthFixed, scale * 65.0f);
-            UI::TableSetupColumn("size",     UI::TableColumnFlags::WidthFixed, scale * 65.0f);
-            UI::TableSetupColumn("last use", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
-            UI::TableSetupColumn("path",     UI::TableColumnFlags::WidthFixed, scale * 100.0f);
+            UI::TableSetupColumn("type", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
+            UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
+            UI::TableSetupColumn("last use (UTC)", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
+            UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
             if (developer)
-                UI::TableSetupColumn("nod",  UI::TableColumnFlags::WidthFixed, scale * 110.0f);
+                UI::TableSetupColumn("nod", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 110.0f);
             UI::TableSetupColumn("name");
             UI::TableHeadersRow();
 
@@ -75,6 +75,8 @@ void Render() {
                         sortMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
                     else if (colSpecs[0].ColumnIndex == 1)
                         sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
+                    else if (colSpecs[0].ColumnIndex == 2)
+                        sortMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
                     else if (colSpecs[0].ColumnIndex == (developer ? 5 : 4))
                         sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
 
@@ -98,7 +100,7 @@ void Render() {
                     UI::Text(GetSizeMB(pack.size, 2));
 
                     UI::TableNextColumn();
-                    UI::Text(pack.lastuse);
+                    UI::Text(tostring(pack.lastuseIso.SubStr(0, 16)));
 
                     UI::TableNextColumn();
                     if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.checksum, false))
