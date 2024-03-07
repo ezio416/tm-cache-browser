@@ -35,7 +35,7 @@ class Pack {
     string   name;
     string   path;
     string   root;
-    uint     size;
+    uint     size        = 0;
     FileType type        = FileType::Unknown;
 
     Pack() { }
