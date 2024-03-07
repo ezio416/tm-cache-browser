@@ -6,6 +6,7 @@ const string programDataPath = "C:/ProgramData/Trackmania/";
 const string cachePath       = programDataPath + "Cache/";
 uint         cacheUsage      = 0;
 const string checksumFile    = programDataPath + "checksum.txt";
+bool         dirty           = false;
 Pack@[]      packs;
 Pack@[]      packsSorted;
 bool         reading         = false;
@@ -33,14 +34,14 @@ void Render() {
         return;
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::None);
-        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeMB(cacheUsage) + ")"))
-            startnew(ReadCacheUsage);
-
         UI::BeginDisabled(reading);
-        UI::SameLine();
-        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " packs)"))
+        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Items)"))
             startnew(ReadChecksumFile);
         UI::EndDisabled();
+
+        UI::SameLine();
+        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeMB(cacheUsage) + ")"))
+            startnew(ReadCacheUsage);
 
         UI::SameLine();
         if (UI::Button(Icons::ExternalLinkSquare + " Open Cache Folder"))
@@ -65,7 +66,7 @@ void Render() {
 
             UI::TableSortSpecs@ tableSpecs = UI::TableGetSortSpecs();
 
-            if (tableSpecs !is null && tableSpecs.Dirty) {
+            if (tableSpecs !is null && (tableSpecs.Dirty || dirty)) {
                 UI::TableColumnSortSpecs[]@ colSpecs = tableSpecs.Specs;
 
                 if (colSpecs !is null && colSpecs.Length > 0) {
@@ -84,6 +85,7 @@ void Render() {
                 }
 
                 tableSpecs.Dirty = false;
+                dirty = false;
             }
 
             UI::ListClipper clipper(packsSorted.Length);
@@ -185,7 +187,6 @@ void ReadChecksumFile() {
 
     trace("reading checksum file done! (" + packs.Length + " packs)");
 
-    startnew(SortPacks);
-
+    dirty = true;
     reading = false;
 }
