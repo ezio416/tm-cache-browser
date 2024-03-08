@@ -5,7 +5,7 @@ Audio::Sample@ audio;
 string         audioExtension;
 Audio::Voice@  audioLoaded;
 string         audioName;
-bool           audioWindow;
+bool           audioWindow   = false;
 string         cachePath;
 uint           cacheUsage    = 0;
 string         checksumFile;
@@ -13,6 +13,7 @@ bool           developer     = false;
 bool           dirty         = false;
 UI::Texture@   image;
 string         imageExtension;
+string         imageName;
 vec2           imageSize     = vec2(0.0f, 0.0f);
 bool           imageWindow   = false;
 Pack@[]        packs;
@@ -21,6 +22,10 @@ string         programDataPath;
 bool           reading       = false;
 const vec4     rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 const float    scale         = UI::GetScale();
+string         text;
+string         textExtension;
+string         textName;
+bool           textWindow    = false;
 const string   title         = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
 void Main() {
@@ -47,6 +52,25 @@ void Render() {
         return;
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::None);
+        if (UI::Button("load sample text file")) {
+            text = "";
+
+            const string path = "C:/Users/Ezio/OpenplanetNext/Plugins/CacheBrowser/info.toml";
+
+            IO::File file(path, IO::FileMode::Read);
+            try {
+                text = file.ReadToEnd();
+            } catch {
+                warn("reading text file failed: " + path);
+            }
+            file.Close();
+
+            string[]@ parts = path.Split("/");
+            textName = parts[parts.Length - 1];
+            parts = textName.Split(".");
+            textExtension = parts[parts.Length - 1].ToUpper();
+        }
+
         UI::BeginDisabled(reading);
         if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Packs)"))
             startnew(ReadChecksumFile);
@@ -156,6 +180,7 @@ void Render() {
                                     warn("reading audio file failed: " + pack.path);
                                 }
 
+                                audioName = pack.name;
                                 audioExtension = pack.extension.ToUpper();
                             }
                             break;
@@ -172,6 +197,7 @@ void Render() {
                                 }
                                 file.Close();
 
+                                imageName = pack.name;
                                 imageExtension = pack.extension.ToUpper();
 
                                 CSystemFidFile@ fid;
@@ -188,6 +214,23 @@ void Render() {
                                     warn("null image from fid: " + pack.path);
                                     imageSize = vec2(512.0f, 512.0f);
                                 }
+                            }
+                            break;
+
+                        case FileType::Text:
+                            if (UI::Selectable(pack.name, false)) {
+                                text = "";
+
+                                IO::File file(pack.path, IO::FileMode::Read);
+                                try {
+                                    text = file.ReadToEnd();
+                                } catch {
+                                    warn("reading text file failed: " + pack.path);
+                                }
+                                file.Close();
+
+                                textName = pack.name;
+                                textExtension = pack.extension.ToUpper();
                             }
                             break;
 
@@ -214,9 +257,11 @@ void Render() {
         }
 
         UI::Begin(title + " (" + audioExtension + " Audio)###" + title + "-audio", audioWindow, UI::WindowFlags::AlwaysAutoResize);
-            if (audioLoaded !is null) {
-                UI::Text(audioName);
+            UI::Text(audioName);
 
+            UI::Separator();
+
+            if (audioLoaded !is null) {
                 const uint position = uint(audioLoaded.GetPosition() * 1000.0);
                 const uint length = uint(audioLoaded.GetLength() * 1000.0);
                 const string progress = Time::Format(position) + " / " + Time::Format(length);
@@ -252,6 +297,10 @@ void Render() {
         imageWindow = true;
 
         UI::Begin(title + " (" + imageExtension + " Image " + uint(imageSize.x) + "x" + uint(imageSize.y) + ")###" + title + "-image", imageWindow, UI::WindowFlags::AlwaysAutoResize);
+            UI::Text(imageName);
+
+            UI::Separator();
+
             if (imageExtension == "DDS") {
                 UI::Text("DDS image file not supported");
                 UI::Dummy(imageSize);
@@ -264,6 +313,23 @@ void Render() {
 
         if (!imageWindow)
             @image = null;
+    }
+
+    if (text.Length > 0) {
+        textWindow = true;
+
+        UI::SetNextWindowSize(512, 512);
+
+        UI::Begin(title + " (" + textExtension + " Text)###" + title + "-text", textWindow, UI::WindowFlags::None);
+            UI::Text(textName);
+
+            UI::Separator();
+
+            UI::TextWrapped(text);
+        UI::End();
+
+        if (!textWindow)
+            text = "";
     }
 }
 
