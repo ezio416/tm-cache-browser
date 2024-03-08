@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-06
+// m 2024-03-08
 
 const string[] extensionsArchive = { "7z", "gz", "rar", "tar", "zip" };
 const string[] extensionsAudio   = { "aac", "aiff", "alac", "flac", "m4a", "mp3", "mux", "ogg", "wav", "wma" };
@@ -18,6 +18,7 @@ enum FileType {
     Macroblock,
     Map,
     Material,
+    Mesh,
     Profile,
     Replay,
     Scores,
@@ -88,6 +89,8 @@ class Pack {
                 type = FileType::Map;
             else if (gbxType == "mat")
                 type = FileType::Material;
+            else if (gbxType == "mesh")
+                type = FileType::Mesh;
             else if (gbxType == "profile")
                 type = FileType::Profile;
             else if (gbxType == "replay")
