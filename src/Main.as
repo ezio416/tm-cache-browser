@@ -1,22 +1,27 @@
 // c 2024-03-06
 // m 2024-03-06
 
-bool         developer     = false;
-string       programDataPath;
-string       cachePath;
-uint         cacheUsage    = 0;
-string       checksumFile;
-bool         dirty         = false;
-UI::Texture@ image;
-string       imageExtension;
-vec2         imageSize     = vec2(0.0f, 0.0f);
-bool         imageWindow   = false;
-Pack@[]      packs;
-Pack@[]      packsSorted;
-bool         reading       = false;
-const vec4   rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const float  scale         = UI::GetScale();
-const string title         = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
+Audio::Sample@ audio;
+string         audioExtension;
+Audio::Voice@  audioLoaded;
+string         audioName;
+bool           audioWindow;
+string         cachePath;
+uint           cacheUsage    = 0;
+string         checksumFile;
+bool           developer     = false;
+bool           dirty         = false;
+UI::Texture@   image;
+string         imageExtension;
+vec2           imageSize     = vec2(0.0f, 0.0f);
+bool           imageWindow   = false;
+Pack@[]        packs;
+Pack@[]        packsSorted;
+string         programDataPath;
+bool           reading       = false;
+const vec4     rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const float    scale         = UI::GetScale();
+const string   title         = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
 void Main() {
 #if SIG_DEVELOPER
@@ -139,35 +144,56 @@ void Render() {
                     }
 
                     UI::TableNextColumn();
-                    if (pack.type == FileType::Image) {
-                        if (UI::Selectable(pack.name, false)) {
-                            IO::File file(pack.path, IO::FileMode::Read);
-                            try {
-                                @image = UI::LoadTexture(file.Read(file.Size()));
-                            } catch {
-                                warn("reading image file failed: " + pack.path);
+                    switch (pack.type) {
+                        case FileType::Audio:
+                            if (UI::Selectable(pack.name, false)) {
+                                @audio = null;
+                                @audioLoaded = null;
+
+                                try {
+                                    @audio = Audio::LoadSampleFromAbsolutePath(pack.path);
+                                } catch {
+                                    warn("reading audio file failed: " + pack.path);
+                                }
+
+                                audioExtension = pack.extension.ToUpper();
                             }
-                            file.Close();
+                            break;
 
-                            imageExtension = pack.extension.ToUpper();
+                        case FileType::Image:
+                            if (UI::Selectable(pack.name, false)) {
+                                @image = null;
 
-                            CSystemFidFile@ fid;
+                                IO::File file(pack.path, IO::FileMode::Read);
+                                try {
+                                    @image = UI::LoadTexture(file.Read(file.Size()));
+                                } catch {
+                                    warn("reading image file failed: " + pack.path);
+                                }
+                                file.Close();
 
-                            if (pack.file.StartsWith("Cache"))
-                                @fid = Fids::GetProgramData(pack.file);
-                            else
-                                @fid = Fids::GetUser(pack.file);
+                                imageExtension = pack.extension.ToUpper();
 
-                            CPlugFileImg@ img = cast<CPlugFileImg@>(Fids::Preload(fid));
-                            if (img !is null)
-                                imageSize = vec2(float(img.Width), float(img.Height));
-                            else {
-                                warn("null image from fid: " + pack.path);
-                                imageSize = vec2(512.0f, 512.0f);
+                                CSystemFidFile@ fid;
+
+                                if (pack.file.StartsWith("Cache"))
+                                    @fid = Fids::GetProgramData(pack.file);
+                                else
+                                    @fid = Fids::GetUser(pack.file);
+
+                                CPlugFileImg@ img = cast<CPlugFileImg@>(Fids::Preload(fid));
+                                if (img !is null)
+                                    imageSize = vec2(float(img.Width), float(img.Height));
+                                else {
+                                    warn("null image from fid: " + pack.path);
+                                    imageSize = vec2(512.0f, 512.0f);
+                                }
                             }
-                        }
-                    } else
-                        UI::Text(pack.name);
+                            break;
+
+                        default:
+                            UI::Text(pack.name);
+                    }
                 }
             }
 
@@ -177,6 +203,51 @@ void Render() {
 
     UI::End();
 
+    if (audio !is null) {
+        audioWindow = true;
+
+        if (audioLoaded is null) {
+            @audioLoaded = Audio::Play(audio, 0.5f);
+
+            if (audioLoaded !is null)
+                audioLoaded.Pause();
+        }
+
+        UI::Begin(title + " (" + audioExtension + " Audio)###" + title + "-audio", audioWindow, UI::WindowFlags::AlwaysAutoResize);
+            if (audioLoaded !is null) {
+                UI::Text(audioName);
+
+                const uint position = uint(audioLoaded.GetPosition() * 1000.0);
+                const uint length = uint(audioLoaded.GetLength() * 1000.0);
+                const string progress = Time::Format(position) + " / " + Time::Format(length);
+                UI::SliderInt("##audio-slider", position, 0, length, progress, UI::SliderFlags::NoInput);
+
+                const float gain = audioLoaded.GetGain();
+                const float newGain = UI::SliderFloat("##audio-gain", gain, 0.0f, 1.0f, "Gain: %.3f", UI::SliderFlags::NoInput);
+                if (gain != newGain)
+                    audioLoaded.SetGain(newGain);
+
+                if (audioLoaded.IsPaused()) {
+                    if (UI::Button("Play"))
+                        audioLoaded.Play();
+                } else {
+                    if (UI::Button("Pause"))
+                        audioLoaded.Pause();
+                }
+            } else
+                UI::Text(audioExtension + " audio file not supported");
+        UI::End();
+
+        if (!audioWindow) {
+            @audio = null;
+
+            if (audioLoaded !is null && !audioLoaded.IsPaused())
+                audioLoaded.Pause();
+
+            @audioLoaded = null;
+        }
+    }
+
     if (image !is null) {
         imageWindow = true;
 
@@ -184,8 +255,11 @@ void Render() {
             if (imageExtension == "DDS") {
                 UI::Text("DDS image file not supported");
                 UI::Dummy(imageSize);
-            } else
+            } else if (image !is null)
                 UI::Image(image, imageSize);
+            else {
+                UI::Text(imageExtension + " image file not supported");
+            }
         UI::End();
 
         if (!imageWindow)
