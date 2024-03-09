@@ -22,6 +22,8 @@ string         programDataPath;
 bool           reading       = false;
 const vec4     rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 const float    scale         = UI::GetScale();
+string         search;
+uint           searchResults;
 string         text;
 string         textExtension;
 string         textName;
@@ -52,25 +54,6 @@ void Render() {
         return;
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::None);
-        if (UI::Button("load sample text file")) {
-            text = "";
-
-            const string path = "C:/Users/Ezio/OpenplanetNext/Plugins/CacheBrowser/info.toml";
-
-            IO::File file(path, IO::FileMode::Read);
-            try {
-                text = file.ReadToEnd();
-            } catch {
-                warn("reading text file failed: " + path);
-            }
-            file.Close();
-
-            string[]@ parts = path.Split("/");
-            textName = parts[parts.Length - 1];
-            parts = textName.Split(".");
-            textExtension = parts[parts.Length - 1].ToUpper();
-        }
-
         UI::BeginDisabled(reading);
         if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Packs)"))
             startnew(ReadChecksumFile);
@@ -91,6 +74,17 @@ void Render() {
         UI::SameLine();
         if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder"))
             OpenExplorerPath(IO::FromAppFolder(""));
+
+        search = UI::InputText("search names", search, false);
+
+        if (search.Length > 0) {
+            UI::SameLine();
+            if (UI::Button(Icons::Times + " Clear Search"))
+                search = "";
+
+            UI::SameLine();
+            UI::Text(searchResults + " results");
+        }
 
         Table_Main();
 
@@ -139,10 +133,23 @@ void Table_Main() {
             dirty = false;
         }
 
-        UI::ListClipper clipper(packsSorted.Length);
+        Pack@[] packsFiltered;
+
+        const string searchLower = search.ToLower();
+
+        for (uint i = 0; i < packsSorted.Length; i++) {
+            Pack@ pack = packsSorted[i];
+
+            if (searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower))
+                packsFiltered.InsertLast(pack);
+        }
+
+        searchResults = packsFiltered.Length;
+
+        UI::ListClipper clipper(packsFiltered.Length);
         while (clipper.Step()) {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                Pack@ pack = packsSorted[i];
+                Pack@ pack = packsFiltered[i];
 
                 UI::TableNextRow();
 
