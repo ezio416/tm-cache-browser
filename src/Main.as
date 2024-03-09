@@ -338,11 +338,8 @@ void RenderTextPreview() {
 
     UI::Begin(title + " (" + textExtension + " Text)###" + title + "-text", textWindow, UI::WindowFlags::None);
         UI::Text(textName);
-
         UI::Separator();
-
         UI::TextWrapped(text);
-
     UI::End();
 
     if (!textWindow)
