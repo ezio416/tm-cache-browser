@@ -246,147 +246,105 @@ void Render() {
 
     UI::End();
 
-    if (audio !is null) {
-        audioWindow = true;
+    RenderAudioPreview();
+    RenderImagePreview();
+    RenderTextPreview();
+}
 
-        if (audioLoaded is null) {
-            @audioLoaded = Audio::Play(audio, 0.5f);
+void RenderAudioPreview() {
+    if (audio is null)
+        return;
 
-            if (audioLoaded !is null)
-                audioLoaded.Pause();
-        }
+    audioWindow = true;
 
-        UI::Begin(title + " (" + audioExtension + " Audio)###" + title + "-audio", audioWindow, UI::WindowFlags::AlwaysAutoResize);
-            UI::Text(audioName);
+    if (audioLoaded is null) {
+        @audioLoaded = Audio::Play(audio, 0.5f);
 
-            UI::Separator();
-
-            if (audioLoaded !is null) {
-                const uint position = uint(audioLoaded.GetPosition() * 1000.0);
-                const uint length = uint(audioLoaded.GetLength() * 1000.0);
-                const string progress = Time::Format(position) + " / " + Time::Format(length);
-                UI::SliderInt("##audio-slider", position, 0, length, progress, UI::SliderFlags::NoInput);
-
-                const float gain = audioLoaded.GetGain();
-                const float newGain = UI::SliderFloat("##audio-gain", gain, 0.0f, 1.0f, "Gain: %.3f", UI::SliderFlags::NoInput);
-                if (gain != newGain)
-                    audioLoaded.SetGain(newGain);
-
-                if (audioLoaded.IsPaused()) {
-                    if (UI::Button("Play"))
-                        audioLoaded.Play();
-                } else {
-                    if (UI::Button("Pause"))
-                        audioLoaded.Pause();
-                }
-            } else
-                UI::Text(audioExtension + " audio file not supported");
-        UI::End();
-
-        if (!audioWindow) {
-            @audio = null;
-
-            if (audioLoaded !is null && !audioLoaded.IsPaused())
-                audioLoaded.Pause();
-
-            @audioLoaded = null;
-        }
+        if (audioLoaded !is null)
+            audioLoaded.Pause();
     }
 
-    if (image !is null) {
-        imageWindow = true;
+    UI::Begin(title + " (" + audioExtension + " Audio)###" + title + "-audio", audioWindow, UI::WindowFlags::AlwaysAutoResize);
+        UI::Text(audioName);
 
-        UI::Begin(title + " (" + imageExtension + " Image " + uint(imageSize.x) + "x" + uint(imageSize.y) + ")###" + title + "-image", imageWindow, UI::WindowFlags::AlwaysAutoResize);
-            UI::Text(imageName);
+        UI::Separator();
 
-            UI::Separator();
+        if (audioLoaded !is null) {
+            const uint position = uint(audioLoaded.GetPosition() * 1000.0);
+            const uint length = uint(audioLoaded.GetLength() * 1000.0);
+            const string progress = Time::Format(position) + " / " + Time::Format(length);
+            UI::SliderInt("##audio-slider", position, 0, length, progress, UI::SliderFlags::NoInput);
 
-            if (imageExtension == "DDS") {
-                UI::Text("DDS image file not supported");
-                UI::Dummy(imageSize);
-            } else if (image !is null)
-                UI::Image(image, imageSize);
-            else {
-                UI::Text(imageExtension + " image file not supported");
+            const float gain = audioLoaded.GetGain();
+            const float newGain = UI::SliderFloat("##audio-gain", gain, 0.0f, 1.0f, "Gain: %.3f", UI::SliderFlags::NoInput);
+            if (gain != newGain)
+                audioLoaded.SetGain(newGain);
+
+            if (audioLoaded.IsPaused()) {
+                if (UI::Button("Play"))
+                    audioLoaded.Play();
+            } else {
+                if (UI::Button("Pause"))
+                    audioLoaded.Pause();
             }
-        UI::End();
+        } else
+            UI::Text(audioExtension + " audio file not supported");
 
-        if (!imageWindow)
-            @image = null;
-    }
+    UI::End();
 
-    if (text.Length > 0) {
-        textWindow = true;
+    if (!audioWindow) {
+        @audio = null;
 
-        UI::SetNextWindowSize(512, 512);
+        if (audioLoaded !is null && !audioLoaded.IsPaused())
+            audioLoaded.Pause();
 
-        UI::Begin(title + " (" + textExtension + " Text)###" + title + "-text", textWindow, UI::WindowFlags::None);
-            UI::Text(textName);
-
-            UI::Separator();
-
-            UI::TextWrapped(text);
-        UI::End();
-
-        if (!textWindow)
-            text = "";
+        @audioLoaded = null;
     }
 }
 
-// courtesy of "4GB Cache" - https://github.com/XertroV/tm-4gb-cache
-void ReadCacheUsage() {
-    cacheUsage = 0;
-
-    try {
-        CSystemFidsFolder@ cache = Fids::GetProgramDataFolder("Cache");
-        cacheUsage = MeasureFidSizes(cache);
-    } catch {
-        error("error getting cache size: " + getExceptionInfo());
-    }
-}
-
-void ReadChecksumFile() {
-    if (reading)
+void RenderImagePreview() {
+    if (image is null)
         return;
 
-    reading = true;
+    imageWindow = true;
 
-    trace("reading checksum file...");
+    UI::Begin(title + " (" + imageExtension + " Image " + uint(imageSize.x) + "x" + uint(imageSize.y) + ")###" + title + "-image", imageWindow, UI::WindowFlags::AlwaysAutoResize);
+        UI::Text(imageName);
 
-    packs.RemoveRange(0, packs.Length);
+        UI::Separator();
 
-    if (IO::FileExists(checksumFile)) {
-        IO::File file(checksumFile, IO::FileMode::Read);
-        string xml = file.ReadToEnd();
-        file.Close();
-
-        XML::Document doc(xml);
-        XML::Node cache = doc.Root().FirstChild();
-        XML::Node node = cache.FirstChild();
-        packs.InsertLast(Pack(node));
-
-        int i = 1;
-
-        while (true) {
-            node = node.NextSibling();
-            Pack pack(node);
-            if (pack.checksum.Length == 0)
-                break;
-            packs.InsertLast(pack);
-
-            if (i++ % 10 == 0)
-                yield();
+        if (imageExtension == "DDS") {
+            UI::Text("DDS image file not supported");
+            UI::Dummy(imageSize);
+        } else if (image !is null)
+            UI::Image(image, imageSize);
+        else {
+            UI::Text(imageExtension + " image file not supported");
         }
-    } else {
-        warn("checksum file not found");
-        reading = false;
+
+    UI::End();
+
+    if (!imageWindow)
+        @image = null;
+}
+
+void RenderTextPreview() {
+    if (text.Length == 0)
         return;
-    }
 
-    trace("reading checksum file done! (" + packs.Length + " packs)");
+    textWindow = true;
 
-    dirty = true;
-    reading = false;
+    UI::SetNextWindowSize(512, 512);
 
-    startnew(ReadCacheUsage);
+    UI::Begin(title + " (" + textExtension + " Text)###" + title + "-text", textWindow, UI::WindowFlags::None);
+        UI::Text(textName);
+
+        UI::Separator();
+
+        UI::TextWrapped(text);
+
+    UI::End();
+
+    if (!textWindow)
+        text = "";
 }

@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-06
+// m 2024-03-08
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
@@ -32,4 +32,62 @@ uint MeasureFidSizes(CSystemFidsFolder@ folder) {
     }
 
     return total;
+}
+
+// courtesy of "4GB Cache" - https://github.com/XertroV/tm-4gb-cache
+void ReadCacheUsage() {
+    cacheUsage = 0;
+
+    try {
+        CSystemFidsFolder@ cache = Fids::GetProgramDataFolder("Cache");
+        cacheUsage = MeasureFidSizes(cache);
+    } catch {
+        error("error getting cache size: " + getExceptionInfo());
+    }
+}
+
+void ReadChecksumFile() {
+    if (reading)
+        return;
+
+    reading = true;
+
+    trace("reading checksum file...");
+
+    packs.RemoveRange(0, packs.Length);
+
+    if (IO::FileExists(checksumFile)) {
+        IO::File file(checksumFile, IO::FileMode::Read);
+        string xml = file.ReadToEnd();
+        file.Close();
+
+        XML::Document doc(xml);
+        XML::Node cache = doc.Root().FirstChild();
+        XML::Node node = cache.FirstChild();
+        packs.InsertLast(Pack(node));
+
+        int i = 1;
+
+        while (true) {
+            node = node.NextSibling();
+            Pack pack(node);
+            if (pack.checksum.Length == 0)
+                break;
+            packs.InsertLast(pack);
+
+            if (i++ % 10 == 0)
+                yield();
+        }
+    } else {
+        warn("checksum file not found");
+        reading = false;
+        return;
+    }
+
+    trace("reading checksum file done! (" + packs.Length + " packs)");
+
+    dirty = true;
+    reading = false;
+
+    startnew(ReadCacheUsage);
 }
