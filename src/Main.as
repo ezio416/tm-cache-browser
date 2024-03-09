@@ -92,66 +92,124 @@ void Render() {
         if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder"))
             OpenExplorerPath(IO::FromAppFolder(""));
 
-        if (UI::BeginTable("##packs-table", developer ? 6 : 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
-            UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
+        Table_Main();
 
-            UI::TableSetupScrollFreeze(0, 1);
-            UI::TableSetupColumn("type", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
-            UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
-            UI::TableSetupColumn("last use (UTC)", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
-            UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
-            if (developer)
-                UI::TableSetupColumn("nod", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 110.0f);
-            UI::TableSetupColumn("name");
-            UI::TableHeadersRow();
+    UI::End();
 
-            UI::TableSortSpecs@ tableSpecs = UI::TableGetSortSpecs();
+    RenderAudioPreview();
+    RenderImagePreview();
+    RenderTextPreview();
+}
 
-            if (tableSpecs !is null && (tableSpecs.Dirty || dirty)) {
-                UI::TableColumnSortSpecs[]@ colSpecs = tableSpecs.Specs;
+void Table_Main() {
+    if (UI::BeginTable("##packs-table", developer ? 6 : 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
+        UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
 
-                if (colSpecs !is null && colSpecs.Length > 0) {
-                    bool ascending = colSpecs[0].SortDirection == UI::SortDirection::Ascending;
+        UI::TableSetupScrollFreeze(0, 1);
+        UI::TableSetupColumn("type", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
+        UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
+        UI::TableSetupColumn("last use (UTC)", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
+        UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
+        if (developer)
+            UI::TableSetupColumn("nod", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 110.0f);
+        UI::TableSetupColumn("name");
+        UI::TableHeadersRow();
 
-                    if (colSpecs[0].ColumnIndex == 0)
-                        sortMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
-                    else if (colSpecs[0].ColumnIndex == 1)
-                        sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
-                    else if (colSpecs[0].ColumnIndex == 2)
-                        sortMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
-                    else if (colSpecs[0].ColumnIndex == (developer ? 5 : 4))
-                        sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+        UI::TableSortSpecs@ tableSpecs = UI::TableGetSortSpecs();
 
-                    startnew(SortPacks);
-                }
+        if (tableSpecs !is null && (tableSpecs.Dirty || dirty)) {
+            UI::TableColumnSortSpecs[]@ colSpecs = tableSpecs.Specs;
 
-                tableSpecs.Dirty = false;
-                dirty = false;
+            if (colSpecs !is null && colSpecs.Length > 0) {
+                bool ascending = colSpecs[0].SortDirection == UI::SortDirection::Ascending;
+
+                if (colSpecs[0].ColumnIndex == 0)
+                    sortMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
+                else if (colSpecs[0].ColumnIndex == 1)
+                    sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
+                else if (colSpecs[0].ColumnIndex == 2)
+                    sortMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
+                else if (colSpecs[0].ColumnIndex == (developer ? 5 : 4))
+                    sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+
+                startnew(SortPacks);
             }
 
-            UI::ListClipper clipper(packsSorted.Length);
-            while (clipper.Step()) {
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    Pack@ pack = packsSorted[i];
+            tableSpecs.Dirty = false;
+            dirty = false;
+        }
 
-                    UI::TableNextRow();
+        UI::ListClipper clipper(packsSorted.Length);
+        while (clipper.Step()) {
+            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                Pack@ pack = packsSorted[i];
 
+                UI::TableNextRow();
+
+                UI::TableNextColumn();
+                UI::Text(pack.type == FileType::Unknown ? "\\$F00Unknown" : tostring(pack.type));
+
+                UI::TableNextColumn();
+                UI::Text(GetSizeMB(pack.size, 2));
+
+                UI::TableNextColumn();
+                UI::Text(tostring(pack.lastuseIso.SubStr(0, 16)));
+
+                UI::TableNextColumn();
+                if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.checksum, false))
+                    IO::SetClipboard(pack.path);
+
+                if (developer) {
                     UI::TableNextColumn();
-                    UI::Text(pack.type == FileType::Unknown ? "\\$F00Unknown" : tostring(pack.type));
+                    if (pack.path.Length > 0 && UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.checksum, false)) {
+                        CSystemFidFile@ fid;
 
-                    UI::TableNextColumn();
-                    UI::Text(GetSizeMB(pack.size, 2));
+                        if (pack.file.StartsWith("Cache"))
+                            @fid = Fids::GetProgramData(pack.file);
+                        else
+                            @fid = Fids::GetUser(pack.file);
 
-                    UI::TableNextColumn();
-                    UI::Text(tostring(pack.lastuseIso.SubStr(0, 16)));
+                        CMwNod@ nod = Fids::Preload(fid);
+                        if (nod !is null)
+                            ExploreNod(nod);
+                        else
+                            warn("null nod: " + pack.path);
+                    }
+                }
 
-                    UI::TableNextColumn();
-                    if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.checksum, false))
-                        IO::SetClipboard(pack.path);
+                UI::TableNextColumn();
+                switch (pack.type) {
+                    case FileType::Audio:
+                        if (UI::Selectable(pack.name, false)) {
+                            @audio = null;
+                            @audioLoaded = null;
 
-                    if (developer) {
-                        UI::TableNextColumn();
-                        if (pack.path.Length > 0 && UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.checksum, false)) {
+                            try {
+                                @audio = Audio::LoadSampleFromAbsolutePath(pack.path);
+                            } catch {
+                                warn("reading audio file failed: " + pack.path);
+                            }
+
+                            audioName = pack.name;
+                            audioExtension = pack.extension.ToUpper();
+                        }
+                        break;
+
+                    case FileType::Image:
+                        if (UI::Selectable(pack.name, false)) {
+                            @image = null;
+
+                            IO::File file(pack.path, IO::FileMode::Read);
+                            try {
+                                @image = UI::LoadTexture(file.Read(file.Size()));
+                            } catch {
+                                warn("reading image file failed: " + pack.path);
+                            }
+                            file.Close();
+
+                            imageName = pack.name;
+                            imageExtension = pack.extension.ToUpper();
+
                             CSystemFidFile@ fid;
 
                             if (pack.file.StartsWith("Cache"))
@@ -159,96 +217,42 @@ void Render() {
                             else
                                 @fid = Fids::GetUser(pack.file);
 
-                            CMwNod@ nod = Fids::Preload(fid);
-                            if (nod !is null)
-                                ExploreNod(nod);
-                            else
-                                warn("null nod: " + pack.path);
+                            CPlugFileImg@ img = cast<CPlugFileImg@>(Fids::Preload(fid));
+                            if (img !is null)
+                                imageSize = vec2(float(img.Width), float(img.Height));
+                            else {
+                                warn("null image from fid: " + pack.path);
+                                imageSize = vec2(512.0f, 512.0f);
+                            }
                         }
-                    }
+                        break;
 
-                    UI::TableNextColumn();
-                    switch (pack.type) {
-                        case FileType::Audio:
-                            if (UI::Selectable(pack.name, false)) {
-                                @audio = null;
-                                @audioLoaded = null;
+                    case FileType::Text:
+                        if (UI::Selectable(pack.name, false)) {
+                            text = "";
 
-                                try {
-                                    @audio = Audio::LoadSampleFromAbsolutePath(pack.path);
-                                } catch {
-                                    warn("reading audio file failed: " + pack.path);
-                                }
-
-                                audioName = pack.name;
-                                audioExtension = pack.extension.ToUpper();
+                            IO::File file(pack.path, IO::FileMode::Read);
+                            try {
+                                text = file.ReadToEnd();
+                            } catch {
+                                warn("reading text file failed: " + pack.path);
                             }
-                            break;
+                            file.Close();
 
-                        case FileType::Image:
-                            if (UI::Selectable(pack.name, false)) {
-                                @image = null;
+                            textName = pack.name;
+                            textExtension = pack.extension.ToUpper();
+                        }
+                        break;
 
-                                IO::File file(pack.path, IO::FileMode::Read);
-                                try {
-                                    @image = UI::LoadTexture(file.Read(file.Size()));
-                                } catch {
-                                    warn("reading image file failed: " + pack.path);
-                                }
-                                file.Close();
-
-                                imageName = pack.name;
-                                imageExtension = pack.extension.ToUpper();
-
-                                CSystemFidFile@ fid;
-
-                                if (pack.file.StartsWith("Cache"))
-                                    @fid = Fids::GetProgramData(pack.file);
-                                else
-                                    @fid = Fids::GetUser(pack.file);
-
-                                CPlugFileImg@ img = cast<CPlugFileImg@>(Fids::Preload(fid));
-                                if (img !is null)
-                                    imageSize = vec2(float(img.Width), float(img.Height));
-                                else {
-                                    warn("null image from fid: " + pack.path);
-                                    imageSize = vec2(512.0f, 512.0f);
-                                }
-                            }
-                            break;
-
-                        case FileType::Text:
-                            if (UI::Selectable(pack.name, false)) {
-                                text = "";
-
-                                IO::File file(pack.path, IO::FileMode::Read);
-                                try {
-                                    text = file.ReadToEnd();
-                                } catch {
-                                    warn("reading text file failed: " + pack.path);
-                                }
-                                file.Close();
-
-                                textName = pack.name;
-                                textExtension = pack.extension.ToUpper();
-                            }
-                            break;
-
-                        default:
-                            UI::Text(pack.name);
-                    }
+                    default:
+                        UI::Text(pack.name);
                 }
             }
-
-            UI::PopStyleColor();
-            UI::EndTable();
         }
 
-    UI::End();
-
-    RenderAudioPreview();
-    RenderImagePreview();
-    RenderTextPreview();
+        UI::PopStyleColor();
+        UI::EndTable();
+    }
 }
 
 void RenderAudioPreview() {
