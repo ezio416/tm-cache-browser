@@ -132,6 +132,22 @@ class Pack {
             type = FileType::Video;
     }
 
+    string GetOldXml() {
+        string oldXml;
+
+        oldXml += "\n	<packdesc>";
+        oldXml += "\n		<name>" + nameOld + "</name>";
+        oldXml += "\n		<root>shared</root>";
+        oldXml += "\n		<file>" + file.Replace("/", "\\") + "</file>";
+        oldXml += "\n		<checksum>" + checksum + "</checksum>";
+        oldXml += "\n		<size>" + size + "</size>";
+        oldXml += "\n		<url>" + url + "</url>";
+        oldXml += "\n		<lastuse>" + lastuse + "</lastuse>";
+        oldXml += "\n	</packdesc>";
+
+        return oldXml;
+    }
+
     void PermaCache() {
         if (type != FileType::CarSkin && type != FileType::MapMod)
             return;
@@ -170,20 +186,10 @@ class Pack {
             xml += "\n	</packdesc>";
             xml += "\n</cache>";
 
-            string xmlOld;
+            const string oldXml = GetOldXml();
 
-            xmlOld += "\n	<packdesc>";
-            xmlOld += "\n		<name>" + nameOld + "</name>";
-            xmlOld += "\n		<root>shared</root>";
-            xmlOld += "\n		<file>" + file.Replace("/", "\\") + "</file>";
-            xmlOld += "\n		<checksum>" + checksum + "</checksum>";
-            xmlOld += "\n		<size>" + size + "</size>";
-            xmlOld += "\n		<url>" + url + "</url>";
-            xmlOld += "\n		<lastuse>" + lastuse + "</lastuse>";
-            xmlOld += "\n	</packdesc>";
-
-            if (xml.Contains(xmlOld))
-                xml = xml.Replace(xmlOld, "");
+            if (xml.Contains(oldXml))
+                xml = xml.Replace(oldXml, "");
             else {
                 warn("xmlOld not found in xml - old cache location remains and will probably cause a game crash");
                 permaCacheIssue = true;
