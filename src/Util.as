@@ -1,10 +1,45 @@
 // c 2024-03-06
-// m 2024-03-08
+// m 2024-03-09
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
+string ForSlash(const string &in path) {
+    return path.Replace("\\", "/");
+}
+
 string GetSizeMB(uint size, uint precision = 1) {
     return Text::Format("%." + precision + "f", float(size) / 1048576.0f) + " MB";
+}
+
+void HoverTooltip(const string &in msg) {
+    if (!UI::IsItemHovered())
+        return;
+
+    UI::BeginTooltip();
+        UI::Text(msg);
+    UI::EndTooltip();
+}
+
+string InsertSeparators(int num) {
+    int abs = Math::Abs(num);
+    if (abs < 1000)
+        return tostring(num);
+
+    string str = tostring(abs);
+
+    string result;
+
+    for (int i = 0; i < str.Length; i++) {
+        if (i > 0 && (str.Length - i) % 3 == 0)
+            result += S_Separator;
+
+        result += str.SubStr(i, 1);
+    }
+
+    if (num < 0)
+        result = "-" + result;
+
+    return result;
 }
 
 // courtesy of MisfitMaid
@@ -54,6 +89,12 @@ void ReadChecksumFile() {
 
     trace("reading checksum file...");
 
+    @archive = null;
+    @archiveFile = null;
+    @audio = null;
+    @audioLoaded = null;
+    @image = null;
+    text = "";
     packs.RemoveRange(0, packs.Length);
 
     if (IO::FileExists(checksumFile)) {
