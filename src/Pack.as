@@ -38,6 +38,7 @@ class Pack {
     string   lastuseIso;
     uint     lastuseUnix     = 0;
     string   name;
+    string   nameOld;
     string   path;
     bool     permaCached     = false;
     bool     permaCacheIssue = false;
@@ -51,7 +52,8 @@ class Pack {
         checksum = node.Child("checksum").Content();
         file     = ForSlash(node.Child("file").Content());
         lastuse  = node.Child("lastuse").Content();
-        name     = ForSlash(node.Child("name").Content());
+        nameOld  = node.Child("name").Content();
+        name     = ForSlash(nameOld);
         root     = node.Child("root").Content();
         size     = Text::ParseUInt(node.Child("size").Content());
 
@@ -156,34 +158,34 @@ class Pack {
             string xml = fileRead.ReadToEnd();
             fileRead.Close();
 
-            const string nameBackSlash = name.Replace("/", "\\");
-
             xml = xml.Split("\n</cache>")[0];
 
             xml += "\n	<packdesc>";
-            xml += "\n		<name>" + nameBackSlash + "</name>";
+            xml += "\n		<name>" + nameOld + "</name>";
             xml += "\n		<root>user</root>";
-            xml += "\n		<file>" + nameBackSlash + "</file>";
+            xml += "\n		<file>" + nameOld + "</file>";
             xml += "\n		<checksum>" + checksum + "</checksum>";
             xml += "\n		<size>" + size + "</size>";
             xml += "\n		<lastuse>" + lastuse + "</lastuse>";
             xml += "\n	</packdesc>";
             xml += "\n</cache>";
 
-            string toReplace = "\n	<packdesc>";
-            toReplace += "\n		<name>" + nameBackSlash + "</name>";
-            toReplace += "\n		<root>shared</root>";
-            toReplace += "\n		<file>" + file.Replace("/", "\\") + "</file>";
-            toReplace += "\n		<checksum>" + checksum + "</checksum>";
-            toReplace += "\n		<size>" + size + "</size>";
-            toReplace += "\n		<url>" + url + "</url>";
-            toReplace += "\n		<lastuse>" + lastuse + "</lastuse>";
-            toReplace += "\n	</packdesc>";
+            string xmlOld;
 
-            if (xml.Contains(toReplace))
-                xml = xml.Replace(toReplace, "");
+            xmlOld += "\n	<packdesc>";
+            xmlOld += "\n		<name>" + nameOld + "</name>";
+            xmlOld += "\n		<root>shared</root>";
+            xmlOld += "\n		<file>" + file.Replace("/", "\\") + "</file>";
+            xmlOld += "\n		<checksum>" + checksum + "</checksum>";
+            xmlOld += "\n		<size>" + size + "</size>";
+            xmlOld += "\n		<url>" + url + "</url>";
+            xmlOld += "\n		<lastuse>" + lastuse + "</lastuse>";
+            xmlOld += "\n	</packdesc>";
+
+            if (xml.Contains(xmlOld))
+                xml = xml.Replace(xmlOld, "");
             else {
-                warn("toReplace not found in xml, old cache location remains and will probably cause a game crash");
+                warn("xmlOld not found in xml - old cache location remains and will probably cause a game crash");
                 permaCacheIssue = true;
             }
 
@@ -191,7 +193,7 @@ class Pack {
             fileWrite.Write(xml);
             fileWrite.Close();
         } catch {
-            error("error writing checksum.txt: " + getExceptionInfo());
+            error("error changing checksum.txt: " + getExceptionInfo());
             permaCacheIssue = true;
         }
     }
