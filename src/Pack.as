@@ -132,6 +132,42 @@ class Pack {
             type = FileType::Video;
     }
 
+    void Delete() {
+        if (root != "shared") {
+            warn("for your own good, deleting files that aren't in the 'Cache' folder is not supported");
+            return;
+        }
+
+        if (IO::FileExists(path)) {
+            try {
+                IO::Delete(path);
+            } catch {
+                error("error deleting file (" + path + "): " + getExceptionInfo());
+            }
+        } else
+            warn("file not found (it's okay, tried to delete anyway): " + path);
+
+        try {
+            IO::File fileRead(checksumFile, IO::FileMode::Read);
+            string xml = fileRead.ReadToEnd();
+            fileRead.Close();
+
+            const string oldXml = GetOldXml();
+
+            if (xml.Contains(oldXml)) {
+                IO::File fileWrite(checksumFile, IO::FileMode::Write);
+                fileWrite.Write(xml.Replace(oldXml, ""));
+                fileWrite.Close();
+            } else {
+                warn("oldXml not found in xml: " + path);
+            }
+        } catch {
+            error("error changing checksum.txt: " + getExceptionInfo());
+        }
+
+        startnew(ReadChecksumFile);
+    }
+
     string GetOldXml() {
         string oldXml;
 
@@ -191,7 +227,7 @@ class Pack {
             if (xml.Contains(oldXml))
                 xml = xml.Replace(oldXml, "");
             else {
-                warn("xmlOld not found in xml - old cache location remains and will probably cause a game crash");
+                warn("oldXml not found in xml - old cache location remains and will probably cause a game crash: " + path);
                 permaCacheIssue = true;
             }
 

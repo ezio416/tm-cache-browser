@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-09
+// m 2024-03-10
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
@@ -93,6 +93,7 @@ void ReadChecksumFile() {
     @archiveFile = null;
     @audio = null;
     @audioLoaded = null;
+    @deleteQueued = null;
     @image = null;
     text = "";
     packs.RemoveRange(0, packs.Length);

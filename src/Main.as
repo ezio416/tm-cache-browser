@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-09
+// m 2024-03-10
 
 Pack@          archive;
 CPlugFileZip@  archiveFile;
@@ -12,12 +12,14 @@ bool           audioWindow   = false;
 string         cachePath;
 uint           cacheUsage    = 0;
 string         checksumFile;
+Pack@          deleteQueued;
+bool           deleteWindow  = false;
 bool           developer     = false;
 bool           dirty         = false;
 UI::Texture@   image;
 string         imageExtension;
 string         imageName;
-vec2           imageSize     = vec2(0.0f, 0.0f);
+vec2           imageSize     = vec2();
 bool           imageWindow   = false;
 Pack@[]        packs;
 Pack@[]        packsSorted;
@@ -34,13 +36,15 @@ bool           textWindow    = false;
 const string   title         = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
 void Main() {
-#if SIG_DEVELOPER
-    developer = true;
-#endif
+    if (Meta::IsDeveloperMode())
+        developer = true;
 
     programDataPath = ForSlash(Fids::GetProgramDataFolder("").FullDirName);
     cachePath = programDataPath + "Cache/";
     checksumFile = programDataPath + "checksum.txt";
+
+    if (S_AutoRead)
+        startnew(ReadChecksumFile);
 }
 
 void RenderMenu() {
@@ -97,10 +101,17 @@ void Render() {
     RenderAudioPreview();
     RenderImagePreview();
     RenderTextPreview();
+    RenderDeleteConfirmation();
 }
 
 void Table_Main() {
-    if (UI::BeginTable("##table-main", developer ? 6 : 5, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
+    int columns = 5;
+    if (developer)
+        columns++;
+    if (S_AllowDelete)
+        columns++;
+
+    if (UI::BeginTable("##table-main", columns, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
         UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
 
         UI::TableSetupScrollFreeze(0, 1);
@@ -110,6 +121,8 @@ void Table_Main() {
         UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
         if (developer)
             UI::TableSetupColumn("nod", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 110.0f);
+        if (S_AllowDelete)
+            UI::TableSetupColumn("delete", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 75.0f);
         UI::TableSetupColumn("name");
         UI::TableHeadersRow();
 
@@ -127,7 +140,7 @@ void Table_Main() {
                     sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
                 else if (colSpecs[0].ColumnIndex == 2)
                     sortMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
-                else if (colSpecs[0].ColumnIndex == (developer ? 5 : 4))
+                else if (colSpecs[0].ColumnIndex == columns - 1)
                     sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
 
                 startnew(SortPacks);
@@ -162,9 +175,11 @@ void Table_Main() {
 
                 UI::TableNextColumn();
                 UI::Text(GetSizeMB(pack.size, 2));
+                HoverTooltip(InsertSeparators(pack.size) + " B");
 
                 UI::TableNextColumn();
                 UI::Text(tostring(pack.lastuseIso.SubStr(0, 16)));
+                HoverTooltip(tostring(pack.lastuseUnix));
 
                 UI::TableNextColumn();
                 if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.checksum, false))
@@ -192,6 +207,12 @@ void Table_Main() {
                         } else
                             warn("null fid: " + pack.path);
                     }
+                }
+
+                if (S_AllowDelete) {
+                    UI::TableNextColumn();
+                    if (pack.root == "shared" && UI::Selectable(Icons::Trash + " Delete##" + pack.checksum, false))
+                        @deleteQueued = pack;
                 }
 
                 UI::TableNextColumn();
@@ -384,9 +405,14 @@ void RenderArchivePreview() {
         }
 
         if (archive.permaCacheIssue) {
-            UI::TextWrapped("\\$FA0There was a problem with permanently caching the file. You should check the Openplanet log, restart your game, and try again. If the problem persists, please open a GitHub issue and include your log:");
+            UI::TextWrapped("\\$FA0There was a problem permanently caching the file. You should check the Openplanet log, restart your game, and try again. If the problem persists, please open a GitHub issue and include your log:");
+
             if (UI::Button(Icons::Github + " Issues"))
                 OpenBrowserURL("https://github.com/ezio416/tm-cache-browser/issues");
+
+            UI::SameLine();
+            if (UI::Button(Icons::ExternalLinkSquare + " Open Openplanet Folder"))
+                OpenExplorerPath(IO::FromDataFolder(""));
         }
     }
 
@@ -491,4 +517,34 @@ void RenderTextPreview() {
 
     if (!textWindow)
         text = "";
+}
+
+void RenderDeleteConfirmation() {
+    if (deleteQueued is null)
+        return;
+
+    deleteWindow = true;
+
+    bool delete = false;
+
+    UI::Begin(title + " (Delete)", deleteWindow, UI::WindowFlags::AlwaysAutoResize);
+        UI::Text(deleteQueued.name);
+
+        UI::Separator();
+
+        UI::Text("Are you sure you want to delete this cached file? \\$F40THIS IS PERMANENT!");
+
+        if (UI::ButtonColored("YES", 0.4f, 1.0f, 0.8f, vec2(scale * 50.0f, scale * 30.0f)))
+            delete = true;
+
+        UI::SameLine();
+        if (UI::ButtonColored("NO", 0.0f, 1.0f, 0.8f, vec2(scale * 370.0f, scale * 30.0f)))
+            deleteWindow = false;
+    UI::End();
+
+    if (delete)
+        deleteQueued.Delete();
+
+    if (!deleteWindow)
+        @deleteQueued = null;
 }
