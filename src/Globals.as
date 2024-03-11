@@ -1,5 +1,5 @@
 // c 2024-03-10
-// m 2024-03-10
+// m 2024-03-11
 
 Pack@              archive;
 CPlugFileZip@      archiveFile;
@@ -20,6 +20,7 @@ Pack@              gbx;
 CGameCtnGhost@     gbxGhost;
 CGameCtnChallenge@ gbxMap;
 bool               gbxWindow         = false;
+bool               hasEditPermission = false;
 bool               hasPlayPermission = false;
 UI::Texture@       image;
 string             imageExtension;

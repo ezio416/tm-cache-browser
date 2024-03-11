@@ -1,12 +1,10 @@
 // c 2024-03-06
-// m 2024-03-10
+// m 2024-03-11
 
 void Main() {
-    if (Meta::IsDeveloperMode())
-        developer = true;
-
-    if (Permissions::PlayLocalMap())
-        hasPlayPermission = true;
+    developer = Meta::IsDeveloperMode();
+    hasEditPermission = Permissions::OpenAdvancedMapEditor();
+    hasPlayPermission = Permissions::PlayLocalMap();
 
     programDataPath = ForSlash(Fids::GetProgramDataFolder("").FullDirName);
     cachePath = programDataPath + "Cache/";
@@ -645,8 +643,10 @@ void RenderGbxPreview() {
                 UI::EndDisabled();
 
                 UI::SameLine();
-                if (UI::Button(Icons::Pencil + " Edit"))
-                    startnew(EditMap);
+                UI::BeginDisabled(!hasEditPermission);
+                    if (UI::Button(Icons::Pencil + " Edit"))
+                        startnew(EditMap);
+                UI::EndDisabled();
             UI::EndDisabled();
         }
         // not working - can't load from cache folder, replays in user folder aren't cached?

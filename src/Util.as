@@ -1,11 +1,11 @@
 // c 2024-03-06
-// m 2024-03-10
+// m 2024-03-11
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
 // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
 void EditMap() {
-    if (loading || gbx.path.Length == 0 || gbxMap is null)
+    if (!hasEditPermission || loading || gbx.path.Length == 0 || gbxMap is null)
         return;
 
     loading = true;
