@@ -3,6 +3,57 @@
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
+// courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
+void EditMap() {
+    if (loading || gbx.path.Length == 0 || gbxMap is null)
+        return;
+
+    loading = true;
+
+    trace("loading map \"" + StripFormatCodes(gbxMap.MapName) + "\" for editing");
+
+    ReturnToMenu();
+
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+    App.ManiaTitleControlScriptAPI.EditMap(gbx.path, "", "");
+
+    const uint64 waitToEditAgain = 5000;
+    const uint64 now = Time::Now;
+
+    while (Time::Now - now < waitToEditAgain)
+        yield();
+
+    loading = false;
+}
+
+// not working - can't load from cache folder, replays in user folder aren't cached?
+// void EditReplay() {
+//     if (loading || gbx.path.Length == 0 || gbxGhost is null)
+//         return;
+
+//     loading = true;
+
+//     trace("loading replay \"" + gbxGhost.Validate_ChallengeUid.GetName() + " - " + gbxGhost.GhostNickname + "\" for editing");
+
+//     ReturnToMenu();
+
+//     CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+//     MwFastBuffer<wstring> replayList;
+//     replayList.Add(gbx.path);
+
+//     App.ManiaTitleControlScriptAPI.EditReplay(replayList);
+
+//     const uint64 waitToEditAgain = 5000;
+//     const uint64 now = Time::Now;
+
+//     while (Time::Now - now < waitToEditAgain)
+//         yield();
+
+//     loading = false;
+// }
+
 string ForSlash(const string &in path) {
     return path.Replace("\\", "/");
 }
@@ -69,6 +120,30 @@ uint MeasureFidSizes(CSystemFidsFolder@ folder) {
     return total;
 }
 
+// courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
+void PlayMap() {
+    if (!hasPlayPermission || loading || gbx.path.Length == 0 || gbxMap is null || gbxMap.TMObjective_AuthorTime == uint(-1))
+        return;
+
+    loading = true;
+
+    trace("loading map \"" + StripFormatCodes(gbxMap.MapName) + "\" for playing");
+
+    ReturnToMenu();
+
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+    App.ManiaTitleControlScriptAPI.PlayMap(gbx.path, "TrackMania/TM_PlayMap_Local", "");
+
+    const uint64 waitToPlayAgain = 5000;
+    const uint64 now = Time::Now;
+
+    while (Time::Now - now < waitToPlayAgain)
+        yield();
+
+    loading = false;
+}
+
 // courtesy of "4GB Cache" - https://github.com/XertroV/tm-4gb-cache
 void ReadCacheUsage() {
     cacheUsage = 0;
@@ -94,6 +169,9 @@ void ReadChecksumFile() {
     @audio = null;
     @audioLoaded = null;
     @deleteQueued = null;
+    @gbx = null;
+    @gbxGhost = null;
+    @gbxMap = null;
     @image = null;
     text = "";
     packs.RemoveRange(0, packs.Length);
@@ -132,4 +210,17 @@ void ReadChecksumFile() {
     reading = false;
 
     startnew(ReadCacheUsage);
+}
+
+// courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
+void ReturnToMenu() {
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+    if (App.Network.PlaygroundClientScriptAPI.IsInGameMenuDisplayed)
+        App.Network.PlaygroundInterfaceScriptHandler.CloseInGameMenu(CGameScriptHandlerPlaygroundInterface::EInGameMenuResult::Quit);
+
+    App.BackToMainMenu();
+
+    while (!App.ManiaTitleControlScriptAPI.IsReady)
+        yield();
 }

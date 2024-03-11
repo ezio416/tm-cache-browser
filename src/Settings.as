@@ -18,3 +18,6 @@ bool S_AllowDelete = false;
 
 [Setting category="General" name="Big number separator"]
 string S_Separator = ",";
+
+[Setting category="General" name="Show debug window"]
+bool S_Debug = false;

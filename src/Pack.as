@@ -14,6 +14,7 @@ enum FileType {
     CarSkin,
     FidCache,
     GameBox,
+    Ghost,
     Image,
     Item,
     Macroblock,
@@ -105,6 +106,8 @@ class Pack {
                 type = FileType::Block;
             else if (gbxType == "fidcache")
                 type = FileType::FidCache;
+            else if (gbxType == "ghost")
+                type = FileType::Ghost;
             else if (gbxType == "item")
                 type = FileType::Item;
             else if (gbxType == "macroblock")

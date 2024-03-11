@@ -1,43 +1,52 @@
 // c 2024-03-06
 // m 2024-03-10
 
-Pack@          archive;
-CPlugFileZip@  archiveFile;
-bool           archiveWindow = false;
-Audio::Sample@ audio;
-string         audioExtension;
-Audio::Voice@  audioLoaded;
-string         audioName;
-bool           audioWindow   = false;
-string         cachePath;
-uint           cacheUsage    = 0;
-string         checksumFile;
-Pack@          deleteQueued;
-bool           deleteWindow  = false;
-bool           developer     = false;
-bool           dirty         = false;
-UI::Texture@   image;
-string         imageExtension;
-string         imageName;
-vec2           imageSize     = vec2();
-bool           imageWindow   = false;
-Pack@[]        packs;
-Pack@[]        packsSorted;
-string         programDataPath;
-bool           reading       = false;
-const vec4     rowBgAltColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const float    scale         = UI::GetScale();
-string         search;
-uint           searchResults;
-string         text;
-string         textExtension;
-string         textName;
-bool           textWindow    = false;
-const string   title         = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
+Pack@              archive;
+CPlugFileZip@      archiveFile;
+bool               archiveWindow     = false;
+Audio::Sample@     audio;
+string             audioExtension;
+Audio::Voice@      audioLoaded;
+string             audioName;
+bool               audioWindow       = false;
+string             cachePath;
+uint               cacheUsage        = 0;
+string             checksumFile;
+Pack@              deleteQueued;
+bool               deleteWindow      = false;
+bool               developer         = false;
+bool               dirty             = false;
+Pack@              gbx;
+CGameCtnGhost@     gbxGhost;
+CGameCtnChallenge@ gbxMap;
+bool               gbxWindow         = false;
+bool               hasPlayPermission = false;
+UI::Texture@       image;
+string             imageExtension;
+string             imageName;
+vec2               imageSize         = vec2();
+bool               imageWindow       = false;
+bool               loading           = false;
+Pack@[]            packs;
+Pack@[]            packsSorted;
+string             programDataPath;
+bool               reading           = false;
+const vec4         rowBgAltColor     = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const float        scale             = UI::GetScale();
+string             search;
+uint               searchResults;
+string             text;
+string             textExtension;
+string             textName;
+bool               textWindow        = false;
+const string       title             = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
 
 void Main() {
     if (Meta::IsDeveloperMode())
         developer = true;
+
+    if (Permissions::PlayLocalMap())
+        hasPlayPermission = true;
 
     programDataPath = ForSlash(Fids::GetProgramDataFolder("").FullDirName);
     cachePath = programDataPath + "Cache/";
@@ -99,9 +108,11 @@ void Render() {
 
     RenderArchivePreview();
     RenderAudioPreview();
+    RenderGbxPreview();
     RenderImagePreview();
     RenderTextPreview();
     RenderDeleteConfirmation();
+    RenderDebug();
 }
 
 void Table_Main() {
@@ -182,13 +193,13 @@ void Table_Main() {
                 HoverTooltip(tostring(pack.lastuseUnix));
 
                 UI::TableNextColumn();
-                if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.checksum, false))
+                if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.path, false))
                     IO::SetClipboard(pack.path);
                 HoverTooltip(pack.path);
 
                 if (developer) {
                     UI::TableNextColumn();
-                    if (pack.path.Length > 0 && UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.checksum, false)) {
+                    if (pack.path.Length > 0 && UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.path, false)) {
                         CSystemFidFile@ fid;
 
                         if (pack.root == "shared")
@@ -211,28 +222,12 @@ void Table_Main() {
 
                 if (S_AllowDelete) {
                     UI::TableNextColumn();
-                    if (pack.root == "shared" && UI::Selectable(Icons::Trash + " Delete##" + pack.checksum, false))
+                    if (pack.root == "shared" && UI::Selectable(Icons::Trash + " Delete##" + pack.path, false))
                         @deleteQueued = pack;
                 }
 
                 UI::TableNextColumn();
                 switch (pack.type) {
-                    case FileType::Audio:
-                        if (UI::Selectable(pack.name, false)) {
-                            @audio = null;
-                            @audioLoaded = null;
-
-                            try {
-                                @audio = Audio::LoadSampleFromAbsolutePath(pack.path);
-                            } catch {
-                                warn("reading audio file failed: " + pack.path);
-                            }
-
-                            audioName = pack.name;
-                            audioExtension = pack.extension.ToUpper();
-                        }
-                        break;
-
                     case FileType::Archive:
                     case FileType::CarSkin:
                     case FileType::MapMod:
@@ -252,6 +247,22 @@ void Table_Main() {
                                 @archiveFile = cast<CPlugFileZip@>(Fids::Preload(fid));
                             else
                                 warn("null fid: " + archive.path);
+                        }
+                        break;
+
+                    case FileType::Audio:
+                        if (UI::Selectable(pack.name, false)) {
+                            @audio = null;
+                            @audioLoaded = null;
+
+                            try {
+                                @audio = Audio::LoadSampleFromAbsolutePath(pack.path);
+                            } catch {
+                                warn("reading audio file failed: " + pack.path);
+                            }
+
+                            audioName = pack.name;
+                            audioExtension = pack.extension.ToUpper();
                         }
                         break;
 
@@ -284,6 +295,30 @@ void Table_Main() {
                                 warn("null image from fid: " + pack.path);
                                 imageSize = vec2(512.0f, 512.0f);
                             }
+                        }
+                        break;
+
+                    case FileType::Map:
+                    case FileType::Replay:
+                        if (UI::Selectable(pack.name, false)) {
+                            @gbx = pack;
+
+                            CSystemFidFile@ fid;
+
+                            if (gbx.root == "shared")
+                                @fid = Fids::GetProgramData(gbx.file);
+                            else if (gbx.root == "user")
+                                @fid = Fids::GetUser(gbx.file);
+                            else if (gbx.root == "data")
+                                @fid = Fids::GetGame("GameData/" + gbx.file);
+
+                            if (fid !is null) {
+                                if (gbx.type == FileType::Map)
+                                    @gbxMap = cast<CGameCtnChallenge@>(Fids::Preload(fid));
+                                else
+                                    @gbxGhost = cast<CGameCtnGhost@>(Fids::Preload(fid));
+                            } else
+                                warn("null fid: " + gbx.path);
                         }
                         break;
 
@@ -473,6 +508,199 @@ void RenderAudioPreview() {
 
         @audioLoaded = null;
     }
+}
+
+void RenderGbxPreview() {
+    if (gbx is null)
+        return;
+
+    gbxWindow = true;
+
+    UI::Begin(title + " (" + tostring(gbx.type) + " GameBox)###" + title + "-gamebox", gbxWindow, UI::WindowFlags::AlwaysAutoResize);
+        UI::Text(gbx.name);
+
+        UI::Separator();
+
+        if ((gbx.type == FileType::Map && gbxMap !is null) || (gbx.type == FileType::Replay && gbxGhost !is null)) {
+            if (UI::BeginTable("##table-archive", 2, UI::TableFlags::RowBg)) {
+                UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
+
+                UI::TableSetupColumn("var", UI::TableColumnFlags::WidthFixed, scale * 100.0f);
+
+                if (gbx.type == FileType::Map) {
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("name");
+                    UI::TableNextColumn();
+                    if (UI::Selectable(StripFormatCodes(gbxMap.MapName), false))
+                        IO::SetClipboard(StripFormatCodes(gbxMap.MapName));
+                    HoverTooltip(Icons::Clipboard + " Copy");
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("name (color)");
+                    UI::TableNextColumn();
+                    if (UI::Selectable(gbxMap.MapName, false))
+                        IO::SetClipboard(gbxMap.MapName);
+                    HoverTooltip(Icons::Clipboard + " Copy");
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("comments");
+                    UI::TableNextColumn();
+                    if (UI::Selectable(gbxMap.Comments, false))
+                        IO::SetClipboard(gbxMap.Comments);
+                    HoverTooltip(Icons::Clipboard + " Copy");
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("map UID");
+                    UI::TableNextColumn();
+                    if (UI::Selectable(gbxMap.EdChallengeId, false))
+                        IO::SetClipboard(gbxMap.EdChallengeId);
+                    HoverTooltip(Icons::Clipboard + " Copy");
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("author");
+                    UI::TableNextColumn();
+                    UI::Text(gbxMap.AuthorNickName);
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("author zone");
+                    UI::TableNextColumn();
+                    UI::Text(gbxMap.AuthorZonePath);
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("size");
+                    UI::TableNextColumn();
+                    UI::Text(tostring(gbxMap.Size));
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("multilap");
+                    UI::TableNextColumn();
+                    UI::Text(tostring(gbxMap.TMObjective_IsLapRace));
+
+                    if (gbxMap.TMObjective_IsLapRace) {
+                        UI::TableNextRow();
+                        UI::TableNextColumn();
+                        UI::Text("# laps");
+                        UI::TableNextColumn();
+                        UI::Text(tostring(gbxMap.TMObjective_NbLaps));
+                    }
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("author time");
+                    UI::TableNextColumn();
+                    UI::Text(Time::Format(gbxMap.TMObjective_AuthorTime != uint(-1) ? gbxMap.TMObjective_AuthorTime : 0));
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("gold time");
+                    UI::TableNextColumn();
+                    UI::Text(Time::Format(gbxMap.TMObjective_GoldTime != uint(-1) ? gbxMap.TMObjective_GoldTime : 0));
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("silver time");
+                    UI::TableNextColumn();
+                    UI::Text(Time::Format(gbxMap.TMObjective_SilverTime != uint(-1) ? gbxMap.TMObjective_SilverTime : 0));
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("bronze time");
+                    UI::TableNextColumn();
+                    UI::Text(Time::Format(gbxMap.TMObjective_BronzeTime != uint(-1) ? gbxMap.TMObjective_BronzeTime : 0));
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("custom mod");
+                    UI::TableNextColumn();
+                    UI::Text(tostring(gbxMap.ModPackDesc !is null));
+
+                    if (gbxMap.ModPackDesc !is null) {
+                        UI::TableNextRow();
+                        UI::TableNextColumn();
+                        UI::Text("mod name");
+                        UI::TableNextColumn();
+                        if (UI::Selectable(gbxMap.ModPackDesc.Name, false))
+                            IO::SetClipboard(gbxMap.ModPackDesc.Name);
+                        HoverTooltip(Icons::Clipboard + " Copy");
+
+                        UI::TableNextRow();
+                        UI::TableNextColumn();
+                        UI::Text("mod URL");
+                        UI::TableNextColumn();
+                        if (UI::Selectable(gbxMap.ModPackDesc.Url, false))
+                            IO::SetClipboard(gbxMap.ModPackDesc.Url);
+                        HoverTooltip(Icons::Clipboard + " Copy");
+                    }
+                } else {
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("map UID");
+                    UI::TableNextColumn();
+                    UI::Text(gbxGhost.Validate_ChallengeUid.GetName());
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("name");
+                    UI::TableNextColumn();
+                    UI::Text(gbxGhost.GhostNickname);
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("zone");
+                    UI::TableNextColumn();
+                    UI::Text(gbxGhost.GhostCountryPath);
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("time");
+                    UI::TableNextColumn();
+                    UI::Text(Time::Format(gbxGhost.RaceTime));
+
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("# respawns");
+                    UI::TableNextColumn();
+                    UI::Text(tostring(gbxGhost.NbRespawns == uint(-1) ? 0 : gbxGhost.NbRespawns));
+                }
+
+                UI::PopStyleColor();
+                UI::EndTable();
+            }
+        } else
+            UI::Text("\\$FF0GameBox nod is null!");
+
+        if (gbx.type == FileType::Map && gbxMap !is null) {
+            UI::BeginDisabled(loading || gbx.root != "user");
+                UI::BeginDisabled(!hasPlayPermission || gbxMap.TMObjective_AuthorTime == uint(-1));
+                    if (UI::Button(Icons::Play + " Play"))
+                        startnew(PlayMap);
+                UI::EndDisabled();
+
+                UI::SameLine();
+                if (UI::Button(Icons::Pencil + " Edit"))
+                    startnew(EditMap);
+            UI::EndDisabled();
+        }
+        // not working - can't load from cache folder, replays in user folder aren't cached?
+        // else if (gbx.type == FileType::Replay && gbxGhost !is null) {
+        //     UI::BeginDisabled(loading);
+        //         if (UI::Button(Icons::Pencil + " Edit"))
+        //             startnew(EditReplay);
+        //     UI::EndDisabled();
+        // }
+
+        UI::End();
+
+    if (!gbxWindow)
+        @gbx = null;
 }
 
 void RenderImagePreview() {
