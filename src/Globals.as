@@ -1,0 +1,43 @@
+// c 2024-03-10
+// m 2024-03-11
+
+Pack@              archive;
+CPlugFileZip@      archiveFile;
+bool               archiveWindow     = false;
+Audio::Sample@     audio;
+string             audioExtension;
+Audio::Voice@      audioLoaded;
+string             audioName;
+bool               audioWindow       = false;
+string             cachePath;
+uint               cacheUsage        = 0;
+string             checksumFile;
+Pack@              deleteQueued;
+bool               deleteWindow      = false;
+bool               developer         = false;
+bool               dirty             = false;
+Pack@              gbx;
+CGameCtnGhost@     gbxGhost;
+CGameCtnChallenge@ gbxMap;
+bool               gbxWindow         = false;
+bool               hasEditPermission = false;
+bool               hasPlayPermission = false;
+UI::Texture@       image;
+string             imageExtension;
+string             imageName;
+vec2               imageSize         = vec2();
+bool               imageWindow       = false;
+bool               loading           = false;
+Pack@[]            packs;
+Pack@[]            packsSorted;
+string             programDataPath;
+bool               reading           = false;
+const vec4         rowBgAltColor     = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+const float        scale             = UI::GetScale();
+string             search;
+uint               searchResults;
+string             text;
+string             textExtension;
+string             textName;
+bool               textWindow        = false;
+const string       title             = "\\$FF2" + Icons::FolderOpen + "\\$G Cache Browser";
