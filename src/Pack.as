@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-10
+// m 2024-05-28
 
 const string[] extensionsArchive = { "7z", "gz", "rar", "tar", "zip" };
 const string[] extensionsAudio   = { "aac", "aiff", "alac", "amr", "flac", "m4a", "m4r", "mp3", "mux", "ogg", "wav", "wma" };
@@ -188,7 +188,7 @@ class Pack {
     }
 
     void PermaCache() {
-        if (type != FileType::CarSkin && type != FileType::MapMod)
+        if (type != FileType::MapMod)
             return;
 
         if (!IO::FileExists(path)) {
