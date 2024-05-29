@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-11
+// m 2024-05-28
 
 void Main() {
     developer = Meta::IsDeveloperMode();
@@ -387,7 +387,7 @@ void RenderArchivePreview() {
             UI::EndTable();
         }
 
-    if (archive.permaCached || (archive.root == "shared" && (archive.type == FileType::CarSkin || archive.type == FileType::MapMod))) {
+    if (archive.permaCached || (archive.root == "shared" && archive.type == FileType::MapMod)) {
         UI::Separator();
 
         if (archive.permaCached)
@@ -490,8 +490,8 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("name");
                     UI::TableNextColumn();
-                    if (UI::Selectable(StripFormatCodes(gbxMap.MapName), false))
-                        IO::SetClipboard(StripFormatCodes(gbxMap.MapName));
+                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName), false))
+                        IO::SetClipboard(Text::StripFormatCodes(gbxMap.MapName));
                     HoverTooltip(Icons::Clipboard + " Copy");
 
                     UI::TableNextRow();
