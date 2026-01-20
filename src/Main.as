@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-05-28
+// m 2026-01-20
 
 void Main() {
     developer = Meta::IsDeveloperMode();
@@ -490,7 +490,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("name");
                     UI::TableNextColumn();
-                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName), false))
+                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName) + '##0', false))
                         IO::SetClipboard(Text::StripFormatCodes(gbxMap.MapName));
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -498,7 +498,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("name (color)");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.MapName, false))
+                    if (UI::Selectable(gbxMap.MapName + '##1', false))
                         IO::SetClipboard(gbxMap.MapName);
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -506,7 +506,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("comments");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.Comments, false))
+                    if (UI::Selectable(gbxMap.Comments + '##2', false))
                         IO::SetClipboard(gbxMap.Comments);
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -514,7 +514,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("map UID");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.EdChallengeId, false))
+                    if (UI::Selectable(gbxMap.EdChallengeId + '##3', false))
                         IO::SetClipboard(gbxMap.EdChallengeId);
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -585,7 +585,7 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text("mod name");
                         UI::TableNextColumn();
-                        if (UI::Selectable(gbxMap.ModPackDesc.Name, false))
+                        if (UI::Selectable(gbxMap.ModPackDesc.Name + '##4', false))
                             IO::SetClipboard(gbxMap.ModPackDesc.Name);
                         HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -593,7 +593,7 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text("mod URL");
                         UI::TableNextColumn();
-                        if (UI::Selectable(gbxMap.ModPackDesc.Url, false))
+                        if (UI::Selectable(gbxMap.ModPackDesc.Url + '##5', false))
                             IO::SetClipboard(gbxMap.ModPackDesc.Url);
                         HoverTooltip(Icons::Clipboard + " Copy");
                     }
