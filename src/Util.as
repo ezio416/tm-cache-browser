@@ -58,8 +58,15 @@ string ForSlash(const string &in path) {
     return path.Replace("\\", "/");
 }
 
-string GetSizeMB(uint size, uint precision = 1) {
-    return Text::Format("%." + precision + "f", float(size) / 1048576.0f) + " MB";
+string GetSizeDynamic(uint size, uint precision = 1) {
+    if (size >= 1073741824) {
+        return Text::Format("%." + precision + "f", float(size) / 1073741824.f) + " GiB";
+    } if (size >= 1048576) {
+        return Text::Format("%." + precision + "f", float(size) / 1048576.f) + " MiB";
+    } if (size >= 1024) {
+        return Text::Format("%." + precision + "f", float(size) / 1024.f) + " KiB";
+    }
+    return tostring(size) + " B";
 }
 
 void HoverTooltip(const string &in msg) {

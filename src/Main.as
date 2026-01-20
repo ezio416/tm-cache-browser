@@ -34,7 +34,7 @@ void Render() {
         UI::EndDisabled();
 
         UI::SameLine();
-        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeMB(cacheUsage) + ")"))
+        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeDynamic(cacheUsage) + ")"))
             startnew(ReadCacheUsage);
 
         UI::SameLine();
@@ -100,7 +100,7 @@ void Table_Main() {
 
         UI::TableSetupScrollFreeze(0, 1);
         UI::TableSetupColumn("type", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
-        UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
+        UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 75.0f);
         UI::TableSetupColumn("last use (UTC)", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
         UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
         if (developer)
@@ -173,7 +173,7 @@ void Table_Main() {
                 UI::Text(pack.type == FileType::Unknown ? "\\$F00Unknown" : tostring(pack.type));
 
                 UI::TableNextColumn();
-                UI::Text(GetSizeMB(pack.size, 2));
+                UI::Text(GetSizeDynamic(pack.size, 2));
                 HoverTooltip(InsertSeparators(pack.size) + " B");
 
                 UI::TableNextColumn();
@@ -364,7 +364,7 @@ void RenderArchivePreview() {
             UI::TableNextColumn();
             UI::Text("size");
             UI::TableNextColumn();
-            UI::Text(GetSizeMB(archive.size, 2));
+            UI::Text(GetSizeDynamic(archive.size, 2));
             HoverTooltip(InsertSeparators(archive.size) + " B");
 
             UI::TableNextRow();
