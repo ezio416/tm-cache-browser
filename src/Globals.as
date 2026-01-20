@@ -1,5 +1,5 @@
 // c 2024-03-10
-// m 2024-03-11
+// m 2026-01-20
 
 Pack@              archive;
 CPlugFileZip@      archiveFile;
@@ -35,6 +35,7 @@ bool               reading           = false;
 const vec4         rowBgAltColor     = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 const float        scale             = UI::GetScale();
 string             search;
+FileType           filterType        = FileType::None;
 uint               searchResults;
 string             text;
 string             textExtension;

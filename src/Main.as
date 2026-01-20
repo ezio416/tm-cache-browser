@@ -49,13 +49,28 @@ void Render() {
         if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder"))
             OpenExplorerPath(IO::FromAppFolder(""));
 
+        UI::SetNextItemWidth(100);
+        if (UI::BeginCombo('filter type', tostring(filterType), UI::ComboFlags::None)) {
+            if (UI::Selectable(tostring(FileType::None), filterType == FileType::None, UI::SelectableFlags::None)) {
+                filterType = FileType::None;
+            }
+            for (int i = 0; i < FileType::None; i++) {
+                if (UI::Selectable(tostring(FileType(i)), filterType == i, UI::SelectableFlags::None)) {
+                    filterType = FileType(i);
+                    break;
+                }
+            }
+            UI::EndCombo();
+        }
+        UI::SameLine();
         search = UI::InputText("search names", search, false);
 
-        if (search.Length > 0) {
+        if (search.Length > 0 || filterType != FileType::None) {
             UI::SameLine();
-            if (UI::Button(Icons::Times + " Clear Search"))
+            if (UI::Button(Icons::Times + " Clear Search")) {
                 search = "";
-
+                filterType = FileType::None;
+            }
             UI::SameLine();
             UI::Text(searchResults + " results");
         }
@@ -126,7 +141,8 @@ void Table_Main() {
         for (uint i = 0; i < packsSorted.Length; i++) {
             Pack@ pack = packsSorted[i];
 
-            if (searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower))
+            if ((searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower)) &&
+                (filterType == FileType::None || pack.type == filterType))
                 packsFiltered.InsertLast(pack);
         }
 
