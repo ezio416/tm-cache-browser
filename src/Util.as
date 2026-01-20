@@ -232,6 +232,7 @@ void ReadChecksumFile() {
     dirty = true;
     reading = false;
 
+    startnew(ScanMapNames);
     startnew(ReadCacheUsage);
 }
 
@@ -246,4 +247,35 @@ void ReturnToMenu() {
 
     while (!App.ManiaTitleControlScriptAPI.IsReady)
         yield();
+}
+
+void ScanMapNames() {
+    uint64 now, lastYield = Time::Now;
+    uint cacheMaps = 0;
+    for (uint i = 0; i < packs.Length; i++) {
+        if (packs[i].type == FileType::Map) {
+            Pack@ pack = packs[i];
+            CSystemFidFile@ fid;
+            if (pack.root == "shared")
+                @fid = Fids::GetProgramData(pack.file);
+            else if (pack.root == "user")
+                @fid = Fids::GetUser(pack.file);
+            else if (pack.root == "data")
+                @fid = Fids::GetGame("GameData/" + pack.file);
+
+            if (fid !is null) {
+                @gbxMap = cast<CGameCtnChallenge@>(Fids::Preload(fid));
+                pack.chosenName = gbxMap.MapName;
+                cacheMaps++;
+            } else
+                warn("null fid: " + pack.path);
+
+            now = Time::Now;
+            if (now - lastYield > maxFrameTime) {
+                lastYield = now;
+                yield();
+            }
+        }
+    }
+    trace("checking map names done! (" + cacheMaps + " cached maps)");
 }

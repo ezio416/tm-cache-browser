@@ -48,8 +48,9 @@ class Pack {
     uint     size            = 0;
     FileType type            = FileType::Unknown;
     string   url;
+    // internal name of things for which this is known separately to filename, such as maps
+    string   chosenName;
 
-    Pack() { }
     Pack(XML::Node node) {
         checksum = node.Child("checksum").Content();
         file     = ForSlash(node.Child("file").Content());

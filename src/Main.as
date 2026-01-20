@@ -67,7 +67,7 @@ void Render() {
 
         if (search.Length > 0 || filterType != FileType::None) {
             UI::SameLine();
-            if (UI::Button(Icons::Times + " Clear Search")) {
+            if (UI::Button(Icons::Times + " Clear Filters")) {
                 search = "";
                 filterType = FileType::None;
             }
@@ -155,7 +155,8 @@ void Table_Main() {
         for (uint i = 0; i < packsSorted.Length; i++) {
             Pack@ pack = packsSorted[i];
 
-            if ((searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower)) &&
+            if ((searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower) ||
+                (pack.chosenName != "" && pack.chosenName.ToLower().Contains(searchLower))) &&
                 (filterType == FileType::None || pack.type == filterType))
                 packsFiltered.InsertLast(pack);
         }
