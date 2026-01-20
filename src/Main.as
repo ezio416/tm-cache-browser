@@ -549,6 +549,12 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text(tostring(gbxMap.TMObjective_NbLaps));
                     }
+                    
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("map type");
+                    UI::TableNextColumn();
+                    UI::Text(gbxMap.MapType);
 
                     UI::TableNextRow();
                     UI::TableNextColumn();

@@ -133,7 +133,23 @@ void PlayMap() {
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
 
-    App.ManiaTitleControlScriptAPI.PlayMap(gbx.path, "TrackMania/TM_PlayMap_Local", "");
+    string mode = "";
+    if (gbxMap.MapType.EndsWith("Race")) {
+        mode = "TrackMania\\TM_PlayMap_Local";
+    } else if (gbxMap.MapType.EndsWith("Stunt")) {
+        mode = "Trackmania\\TM_StuntSolo_Local";
+    } else if (gbxMap.MapType.EndsWith("Platform")) {
+        mode = "Trackmania\\TM_Platform_Local";
+    } else if (gbxMap.MapType.EndsWith("Royal")) {
+        mode = "Trackmania\\TM_RoyalTimeAttack_Local";
+    } else if (gbxMap.MapType == "") {
+        print('no mode, defaulting to race');
+        mode = "TrackMania\\TM_PlayMap_Local";
+    } else {
+        print('unknown mode: ' + gbxMap.MapType);
+    }
+
+    App.ManiaTitleControlScriptAPI.PlayMap(gbx.path, mode, "");
 
     const uint64 waitToPlayAgain = 5000;
     const uint64 now = Time::Now;
