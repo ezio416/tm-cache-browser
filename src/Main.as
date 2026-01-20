@@ -118,14 +118,28 @@ void Table_Main() {
             if (colSpecs !is null && colSpecs.Length > 0) {
                 bool ascending = colSpecs[0].SortDirection == UI::SortDirection::Ascending;
 
+                SortMethod newMethod = SortMethod::None;
+
                 if (colSpecs[0].ColumnIndex == 0)
-                    sortMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
+                    newMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
                 else if (colSpecs[0].ColumnIndex == 1)
-                    sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
+                    newMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
                 else if (colSpecs[0].ColumnIndex == 2)
-                    sortMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
+                    newMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
                 else if (colSpecs[0].ColumnIndex == columns - 1)
-                    sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+                    newMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+
+                if (newMethod != SortMethod::None) {
+                    int i;
+                    if ((i = sortMethods.Find(newMethod)) != -1) {
+                        sortMethods.RemoveAt(i);
+                    }
+                    if ((i = sortMethods.Find(-newMethod)) != -1) {
+                        sortMethods.RemoveAt(i);
+                    }
+
+                    sortMethods.InsertLast(newMethod);
+                }
 
                 startnew(SortPacks);
             }
