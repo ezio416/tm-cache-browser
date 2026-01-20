@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-11
+// m 2026-01-20
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
@@ -10,7 +10,7 @@ void EditMap() {
 
     loading = true;
 
-    trace("loading map \"" + StripFormatCodes(gbxMap.MapName) + "\" for editing");
+    trace("loading map \"" + Text::StripFormatCodes(gbxMap.MapName) + "\" for editing");
 
     ReturnToMenu();
 
@@ -127,7 +127,7 @@ void PlayMap() {
 
     loading = true;
 
-    trace("loading map \"" + StripFormatCodes(gbxMap.MapName) + "\" for playing");
+    trace("loading map \"" + Text::StripFormatCodes(gbxMap.MapName) + "\" for playing");
 
     ReturnToMenu();
 
