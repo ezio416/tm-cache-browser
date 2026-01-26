@@ -63,7 +63,7 @@ void Render() {
             UI::EndCombo();
         }
         UI::SameLine();
-        search = UI::InputText("search names", search, false);
+        search = UI::InputText("search names", search);
 
         if (search.Length > 0 || filterType != FileType::None) {
             UI::SameLine();
