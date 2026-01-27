@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-03-11
+// m 2026-01-20
 
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
@@ -10,7 +10,7 @@ void EditMap() {
 
     loading = true;
 
-    trace("loading map \"" + StripFormatCodes(gbxMap.MapName) + "\" for editing");
+    trace("loading map \"" + Text::StripFormatCodes(gbxMap.MapName) + "\" for editing");
 
     ReturnToMenu();
 
@@ -58,8 +58,15 @@ string ForSlash(const string &in path) {
     return path.Replace("\\", "/");
 }
 
-string GetSizeMB(uint size, uint precision = 1) {
-    return Text::Format("%." + precision + "f", float(size) / 1048576.0f) + " MB";
+string GetSizeDynamic(uint size, uint precision = 1) {
+    if (size >= 1073741824) {
+        return Text::Format("%." + precision + "f", float(size) / 1073741824.f) + " GiB";
+    } if (size >= 1048576) {
+        return Text::Format("%." + precision + "f", float(size) / 1048576.f) + " MiB";
+    } if (size >= 1024) {
+        return Text::Format("%." + precision + "f", float(size) / 1024.f) + " KiB";
+    }
+    return tostring(size) + " B";
 }
 
 void HoverTooltip(const string &in msg) {
@@ -127,13 +134,29 @@ void PlayMap() {
 
     loading = true;
 
-    trace("loading map \"" + StripFormatCodes(gbxMap.MapName) + "\" for playing");
+    trace("loading map \"" + Text::StripFormatCodes(gbxMap.MapName) + "\" for playing");
 
     ReturnToMenu();
 
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
 
-    App.ManiaTitleControlScriptAPI.PlayMap(gbx.path, "TrackMania/TM_PlayMap_Local", "");
+    string mode = "";
+    if (gbxMap.MapType.EndsWith("Race")) {
+        mode = "TrackMania\\TM_PlayMap_Local";
+    } else if (gbxMap.MapType.EndsWith("Stunt")) {
+        mode = "Trackmania\\TM_StuntSolo_Local";
+    } else if (gbxMap.MapType.EndsWith("Platform")) {
+        mode = "Trackmania\\TM_Platform_Local";
+    } else if (gbxMap.MapType.EndsWith("Royal")) {
+        mode = "Trackmania\\TM_RoyalTimeAttack_Local";
+    } else if (gbxMap.MapType == "") {
+        print('no mode, defaulting to race');
+        mode = "TrackMania\\TM_PlayMap_Local";
+    } else {
+        print('unknown mode: ' + gbxMap.MapType);
+    }
+
+    App.ManiaTitleControlScriptAPI.PlayMap(gbx.path, mode, "");
 
     const uint64 waitToPlayAgain = 5000;
     const uint64 now = Time::Now;
@@ -209,6 +232,7 @@ void ReadChecksumFile() {
     dirty = true;
     reading = false;
 
+    startnew(ScanMapNames);
     startnew(ReadCacheUsage);
 }
 
@@ -223,4 +247,35 @@ void ReturnToMenu() {
 
     while (!App.ManiaTitleControlScriptAPI.IsReady)
         yield();
+}
+
+void ScanMapNames() {
+    uint64 now, lastYield = Time::Now;
+    uint cacheMaps = 0;
+    for (uint i = 0; i < packs.Length; i++) {
+        if (packs[i].type == FileType::Map) {
+            Pack@ pack = packs[i];
+            CSystemFidFile@ fid;
+            if (pack.root == "shared")
+                @fid = Fids::GetProgramData(pack.file);
+            else if (pack.root == "user")
+                @fid = Fids::GetUser(pack.file);
+            else if (pack.root == "data")
+                @fid = Fids::GetGame("GameData/" + pack.file);
+
+            if (fid !is null) {
+                @gbxMap = cast<CGameCtnChallenge@>(Fids::Preload(fid));
+                pack.chosenName = gbxMap.MapName;
+                cacheMaps++;
+            } else
+                warn("null fid: " + pack.path);
+
+            now = Time::Now;
+            if (now - lastYield > maxFrameTime) {
+                lastYield = now;
+                yield();
+            }
+        }
+    }
+    trace("checking map names done! (" + cacheMaps + " cached maps)");
 }

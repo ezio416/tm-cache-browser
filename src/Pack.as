@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-05-28
+// m 2026-01-20
 
 const string[] extensionsArchive = { "7z", "gz", "rar", "tar", "zip" };
 const string[] extensionsAudio   = { "aac", "aiff", "alac", "amr", "flac", "m4a", "m4r", "mp3", "mux", "ogg", "wav", "wma" };
@@ -28,7 +28,8 @@ enum FileType {
     SystemConfig,
     Text,
     Unknown,
-    Video
+    Video,
+    None
 }
 
 class Pack {
@@ -47,8 +48,9 @@ class Pack {
     uint     size            = 0;
     FileType type            = FileType::Unknown;
     string   url;
+    // internal name of things for which this is known separately to filename, such as maps
+    string   chosenName;
 
-    Pack() { }
     Pack(XML::Node node) {
         checksum = node.Child("checksum").Content();
         file     = ForSlash(node.Child("file").Content());

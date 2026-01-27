@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2024-05-28
+// m 2026-01-20
 
 void Main() {
     developer = Meta::IsDeveloperMode();
@@ -34,7 +34,7 @@ void Render() {
         UI::EndDisabled();
 
         UI::SameLine();
-        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeMB(cacheUsage) + ")"))
+        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeDynamic(cacheUsage) + ")"))
             startnew(ReadCacheUsage);
 
         UI::SameLine();
@@ -49,13 +49,28 @@ void Render() {
         if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder"))
             OpenExplorerPath(IO::FromAppFolder(""));
 
-        search = UI::InputText("search names", search, false);
+        UI::SetNextItemWidth(100);
+        if (UI::BeginCombo('filter type', tostring(filterType), UI::ComboFlags::None)) {
+            if (UI::Selectable(tostring(FileType::None), filterType == FileType::None, UI::SelectableFlags::None)) {
+                filterType = FileType::None;
+            }
+            for (int i = 0; i < FileType::None; i++) {
+                if (UI::Selectable(tostring(FileType(i)), filterType == i, UI::SelectableFlags::None)) {
+                    filterType = FileType(i);
+                    break;
+                }
+            }
+            UI::EndCombo();
+        }
+        UI::SameLine();
+        search = UI::InputText("search names", search);
 
-        if (search.Length > 0) {
+        if (search.Length > 0 || filterType != FileType::None) {
             UI::SameLine();
-            if (UI::Button(Icons::Times + " Clear Search"))
+            if (UI::Button(Icons::Times + " Clear Filters")) {
                 search = "";
-
+                filterType = FileType::None;
+            }
             UI::SameLine();
             UI::Text(searchResults + " results");
         }
@@ -85,7 +100,7 @@ void Table_Main() {
 
         UI::TableSetupScrollFreeze(0, 1);
         UI::TableSetupColumn("type", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
-        UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 65.0f);
+        UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 75.0f);
         UI::TableSetupColumn("last use (UTC)", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
         UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
         if (developer)
@@ -103,14 +118,28 @@ void Table_Main() {
             if (colSpecs !is null && colSpecs.Length > 0) {
                 bool ascending = colSpecs[0].SortDirection == UI::SortDirection::Ascending;
 
+                SortMethod newMethod = SortMethod::None;
+
                 if (colSpecs[0].ColumnIndex == 0)
-                    sortMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
+                    newMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
                 else if (colSpecs[0].ColumnIndex == 1)
-                    sortMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
+                    newMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
                 else if (colSpecs[0].ColumnIndex == 2)
-                    sortMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
+                    newMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
                 else if (colSpecs[0].ColumnIndex == columns - 1)
-                    sortMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+                    newMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+
+                if (newMethod != SortMethod::None) {
+                    int i;
+                    if ((i = sortMethods.Find(newMethod)) != -1) {
+                        sortMethods.RemoveAt(i);
+                    }
+                    if ((i = sortMethods.Find(-newMethod)) != -1) {
+                        sortMethods.RemoveAt(i);
+                    }
+
+                    sortMethods.InsertLast(newMethod);
+                }
 
                 startnew(SortPacks);
             }
@@ -126,7 +155,9 @@ void Table_Main() {
         for (uint i = 0; i < packsSorted.Length; i++) {
             Pack@ pack = packsSorted[i];
 
-            if (searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower))
+            if ((searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower) ||
+                (pack.chosenName != "" && pack.chosenName.ToLower().Contains(searchLower))) &&
+                (filterType == FileType::None || pack.type == filterType))
                 packsFiltered.InsertLast(pack);
         }
 
@@ -143,7 +174,7 @@ void Table_Main() {
                 UI::Text(pack.type == FileType::Unknown ? "\\$F00Unknown" : tostring(pack.type));
 
                 UI::TableNextColumn();
-                UI::Text(GetSizeMB(pack.size, 2));
+                UI::Text(GetSizeDynamic(pack.size, 2));
                 HoverTooltip(InsertSeparators(pack.size) + " B");
 
                 UI::TableNextColumn();
@@ -334,7 +365,7 @@ void RenderArchivePreview() {
             UI::TableNextColumn();
             UI::Text("size");
             UI::TableNextColumn();
-            UI::Text(GetSizeMB(archive.size, 2));
+            UI::Text(GetSizeDynamic(archive.size, 2));
             HoverTooltip(InsertSeparators(archive.size) + " B");
 
             UI::TableNextRow();
@@ -490,7 +521,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("name");
                     UI::TableNextColumn();
-                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName), false))
+                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName) + '##0', false))
                         IO::SetClipboard(Text::StripFormatCodes(gbxMap.MapName));
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -498,7 +529,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("name (color)");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.MapName, false))
+                    if (UI::Selectable(gbxMap.MapName + '##1', false))
                         IO::SetClipboard(gbxMap.MapName);
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -506,7 +537,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("comments");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.Comments, false))
+                    if (UI::Selectable(gbxMap.Comments + '##2', false))
                         IO::SetClipboard(gbxMap.Comments);
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -514,7 +545,7 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("map UID");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.EdChallengeId, false))
+                    if (UI::Selectable(gbxMap.EdChallengeId + '##3', false))
                         IO::SetClipboard(gbxMap.EdChallengeId);
                     HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -549,6 +580,12 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text(tostring(gbxMap.TMObjective_NbLaps));
                     }
+                    
+                    UI::TableNextRow();
+                    UI::TableNextColumn();
+                    UI::Text("map type");
+                    UI::TableNextColumn();
+                    UI::Text(gbxMap.MapType);
 
                     UI::TableNextRow();
                     UI::TableNextColumn();
@@ -585,7 +622,7 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text("mod name");
                         UI::TableNextColumn();
-                        if (UI::Selectable(gbxMap.ModPackDesc.Name, false))
+                        if (UI::Selectable(gbxMap.ModPackDesc.Name + '##4', false))
                             IO::SetClipboard(gbxMap.ModPackDesc.Name);
                         HoverTooltip(Icons::Clipboard + " Copy");
 
@@ -593,7 +630,7 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text("mod URL");
                         UI::TableNextColumn();
-                        if (UI::Selectable(gbxMap.ModPackDesc.Url, false))
+                        if (UI::Selectable(gbxMap.ModPackDesc.Url + '##5', false))
                             IO::SetClipboard(gbxMap.ModPackDesc.Url);
                         HoverTooltip(Icons::Clipboard + " Copy");
                     }
