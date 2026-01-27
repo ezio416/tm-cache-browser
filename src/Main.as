@@ -1,5 +1,5 @@
 // c 2024-03-06
-// m 2026-01-20
+// m 2026-01-27
 
 void Main() {
     developer = Meta::IsDeveloperMode();
@@ -580,7 +580,7 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text(tostring(gbxMap.TMObjective_NbLaps));
                     }
-                    
+
                     UI::TableNextRow();
                     UI::TableNextColumn();
                     UI::Text("map type");
