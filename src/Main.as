@@ -33,7 +33,7 @@ void Render() {
         return;
     }
 
-    UI::Begin(title, S_Enabled, UI::WindowFlags::None);
+    if (UI::Begin(title, S_Enabled)) {
         UI::BeginDisabled(reading);
         if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Packs)")) {
             startnew(ReadChecksumFile);
@@ -90,6 +90,7 @@ void Render() {
         }
 
         Table_Main();
+    }
 
     UI::End();
 
@@ -405,7 +406,11 @@ void RenderArchivePreview() {
 
     archiveWindow = true;
 
-    UI::Begin(title + " (" + archive.extension.ToUpper() + " Archive)###" + title + "-archive", archiveWindow, UI::WindowFlags::AlwaysAutoResize);
+    if (UI::Begin(
+        title + " (" + archive.extension.ToUpper() + " Archive)###" + title + "-archive",
+        archiveWindow,
+        UI::WindowFlags::AlwaysAutoResize
+    )) {
         UI::Text(archive.name);
 
         UI::Separator();
@@ -481,32 +486,34 @@ void RenderArchivePreview() {
             UI::EndTable();
         }
 
-    if (false
-        or archive.permaCached
-        or (true
-            and archive.root == "shared"
-            and archive.type == FileType::MapMod
-        )
-    ) {
-        UI::Separator();
+        if (false
+            or archive.permaCached
+            or (true
+                and archive.root == "shared"
+                and archive.type == FileType::MapMod
+            )
+        ) {
+            UI::Separator();
 
-        if (archive.permaCached) {
-            UI::TextWrapped("\\$FF0File has been permanently cached.");
-        } else {
-            if (UI::Button("Permanently Cache (Move to " + ForSlash(IO::FromUserGameFolder("")) + ")"))
-                archive.PermaCache();
-        }
-
-        if (archive.permaCacheIssue) {
-            UI::TextWrapped("\\$FA0There was a problem permanently caching the file. You should check the Openplanet log, restart your game, and try again. If the problem persists, please open a GitHub issue and include your log:");
-
-            if (UI::Button(Icons::Github + " Issues")) {
-                OpenBrowserURL("https://github.com/ezio416/tm-cache-browser/issues");
+            if (archive.permaCached) {
+                UI::TextWrapped("\\$FF0File has been permanently cached.");
+            } else {
+                if (UI::Button("Permanently Cache (Move to " + ForSlash(IO::FromUserGameFolder("")) + ")")) {
+                    archive.PermaCache();
+                }
             }
 
-            UI::SameLine();
-            if (UI::Button(Icons::ExternalLinkSquare + " Open Openplanet Folder")) {
-                OpenExplorerPath(IO::FromDataFolder(""));
+            if (archive.permaCacheIssue) {
+                UI::TextWrapped("\\$FA0There was a problem permanently caching the file. You should check the Openplanet log, restart your game, and try again. If the problem persists, please open a GitHub issue and include your log:");
+
+                if (UI::Button(Icons::Github + " Issues")) {
+                    OpenBrowserURL("https://github.com/ezio416/tm-cache-browser/issues");
+                }
+
+                UI::SameLine();
+                if (UI::Button(Icons::ExternalLinkSquare + " Open Openplanet Folder")) {
+                    OpenExplorerPath(IO::FromDataFolder(""));
+                }
             }
         }
     }
@@ -534,7 +541,11 @@ void RenderAudioPreview() {
         }
     }
 
-    UI::Begin(title + " (" + audioExtension + " Audio)###" + title + "-audio", audioWindow, UI::WindowFlags::AlwaysAutoResize);
+    if (UI::Begin(
+        title + " (" + audioExtension + " Audio)###" + title + "-audio",
+        audioWindow,
+        UI::WindowFlags::AlwaysAutoResize
+    )) {
         UI::Text(audioName);
 
         UI::Separator();
@@ -563,6 +574,7 @@ void RenderAudioPreview() {
         } else {
             UI::Text(audioExtension + " audio file not supported");
         }
+    }
 
     UI::End();
 
@@ -587,7 +599,11 @@ void RenderGbxPreview() {
 
     gbxWindow = true;
 
-    UI::Begin(title + " (" + tostring(gbx.type) + " GameBox)###" + title + "-gamebox", gbxWindow, UI::WindowFlags::AlwaysAutoResize);
+    if (UI::Begin(
+        title + " (" + tostring(gbx.type) + " GameBox)###" + title + "-gamebox",
+        gbxWindow,
+        UI::WindowFlags::AlwaysAutoResize
+    )) {
         UI::Text(gbx.name);
 
         UI::Separator();
@@ -802,8 +818,9 @@ void RenderGbxPreview() {
         //             startnew(EditReplay);
         //     UI::EndDisabled();
         // }
+    }
 
-        UI::End();
+    UI::End();
 
     if (!gbxWindow) {
         @gbx = null;
@@ -817,7 +834,11 @@ void RenderImagePreview() {
 
     imageWindow = true;
 
-    UI::Begin(title + " (" + imageExtension + " Image " + uint(imageSize.x) + "x" + uint(imageSize.y) + ")###" + title + "-image", imageWindow, UI::WindowFlags::AlwaysAutoResize);
+    if (UI::Begin(
+        title + " (" + imageExtension + " Image " + uint(imageSize.x) + "x" + uint(imageSize.y) + ")###" + title + "-image",
+        imageWindow,
+        UI::WindowFlags::AlwaysAutoResize
+    )) {
         UI::Text(imageName);
 
         UI::Separator();
@@ -830,6 +851,7 @@ void RenderImagePreview() {
         } else {
             UI::Text(imageExtension + " image file not supported");
         }
+    }
 
     UI::End();
 
@@ -847,10 +869,12 @@ void RenderTextPreview() {
 
     UI::SetNextWindowSize(512, 512);
 
-    UI::Begin(title + " (" + textExtension + " Text)###" + title + "-text", textWindow, UI::WindowFlags::None);
+    if (UI::Begin(title + " (" + textExtension + " Text)###" + title + "-text", textWindow)) {
         UI::Text(textName);
         UI::Separator();
         UI::TextWrapped(text);
+    }
+
     UI::End();
 
     if (!textWindow) {
@@ -867,7 +891,7 @@ void RenderDeleteConfirmation() {
 
     bool delete = false;
 
-    UI::Begin(title + " (Delete)", deleteWindow, UI::WindowFlags::AlwaysAutoResize);
+    if (UI::Begin(title + " (Delete)", deleteWindow, UI::WindowFlags::AlwaysAutoResize)) {
         UI::Text(deleteQueued.name);
 
         UI::Separator();
@@ -882,6 +906,7 @@ void RenderDeleteConfirmation() {
         if (UI::ButtonColored("NO", 0.0f, 1.0f, 0.8f, vec2(scale * 370.0f, scale * 30.0f))) {
             deleteWindow = false;
         }
+    }
 
     UI::End();
 

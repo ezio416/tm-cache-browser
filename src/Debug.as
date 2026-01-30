@@ -3,7 +3,7 @@ void RenderDebug() {
         return;
     }
 
-    UI::Begin(title + " (Debug)", S_Debug, UI::WindowFlags::None);
+    if (UI::Begin(title + " (Debug)", S_Debug)) {
         UI::Text("Columns are sorted based on main window");
         UI::Text("Click any value to copy to clipboard");
 
@@ -115,6 +115,7 @@ void RenderDebug() {
             UI::PopStyleColor();
             UI::EndTable();
         }
+    }
 
     UI::End();
 }
