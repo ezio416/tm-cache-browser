@@ -17,7 +17,7 @@ void EditMap() {
 
     ReturnToMenu();
 
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    auto App = cast<CTrackMania>(GetApp());
 
     App.ManiaTitleControlScriptAPI.EditMap(gbx.path, "", "");
 
@@ -158,7 +158,7 @@ void PlayMap() {
 
     ReturnToMenu();
 
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    auto App = cast<CTrackMania>(GetApp());
 
     string mode = "";
     if (gbxMap.MapType.EndsWith("Race")) {

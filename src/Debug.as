@@ -1,3 +1,5 @@
+const UI::TableColumnFlags fixedNoResize = UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize;
+
 void RenderDebug() {
     if (!S_Debug) {
         return;
@@ -13,15 +15,15 @@ void RenderDebug() {
             UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
 
             UI::TableSetupScrollFreeze(0, 1);
-            UI::TableSetupColumn("type",        UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 65.0f);
-            UI::TableSetupColumn("size",        UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 65.0f);
-            UI::TableSetupColumn("root",        UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 65.0f);
-            UI::TableSetupColumn("ext",         UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 65.0f);
-            UI::TableSetupColumn("pCached",     UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 65.0f);
-            UI::TableSetupColumn("pCIssue",     UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 65.0f);
-            UI::TableSetupColumn("lastuse",     UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 120.0f);
-            UI::TableSetupColumn("lastuseIso",  UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 130.0f);
-            UI::TableSetupColumn("lastuseUnix", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize, scale * 80.0f);
+            UI::TableSetupColumn("type",        fixedNoResize, scale * 65.0f);
+            UI::TableSetupColumn("size",        fixedNoResize, scale * 65.0f);
+            UI::TableSetupColumn("root",        fixedNoResize, scale * 65.0f);
+            UI::TableSetupColumn("ext",         fixedNoResize, scale * 65.0f);
+            UI::TableSetupColumn("pCached",     fixedNoResize, scale * 65.0f);
+            UI::TableSetupColumn("pCIssue",     fixedNoResize, scale * 65.0f);
+            UI::TableSetupColumn("lastuse",     fixedNoResize, scale * 120.0f);
+            UI::TableSetupColumn("lastuseIso",  fixedNoResize, scale * 130.0f);
+            UI::TableSetupColumn("lastuseUnix", fixedNoResize, scale * 80.0f);
             UI::TableSetupColumn("nameOld");
             UI::TableSetupColumn("name");
             UI::TableSetupColumn("file");
