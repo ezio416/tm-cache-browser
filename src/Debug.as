@@ -3,6 +3,8 @@ void RenderDebug() {
         return;
     }
 
+    const float scale = UI::GetScale();
+
     if (UI::Begin(title + " (Debug)", S_Debug)) {
         UI::Text("Columns are sorted based on main window");
         UI::Text("Click any value to copy to clipboard");

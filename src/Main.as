@@ -104,6 +104,8 @@ void Render() {
 }
 
 void Table_Main() {
+    const float scale = UI::GetScale();
+
     int columns = 5;
     if (developer) {
         columns++;
@@ -404,6 +406,8 @@ void RenderArchivePreview() {
         return;
     }
 
+    const float scale = UI::GetScale();
+
     archiveWindow = true;
 
     if (UI::Begin(
@@ -596,6 +600,8 @@ void RenderGbxPreview() {
     if (gbx is null) {
         return;
     }
+
+    const float scale = UI::GetScale();
 
     gbxWindow = true;
 
@@ -886,6 +892,8 @@ void RenderDeleteConfirmation() {
     if (deleteQueued is null) {
         return;
     }
+
+    const float scale = UI::GetScale();
 
     deleteWindow = true;
 

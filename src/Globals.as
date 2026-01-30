@@ -30,7 +30,6 @@ Pack@[]            packsSorted;
 string             programDataPath;
 bool               reading           = false;
 const vec4         rowBgAltColor     = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-const float        scale             = UI::GetScale();
 string             search;
 FileType           filterType        = FileType::None;
 uint               searchResults;
