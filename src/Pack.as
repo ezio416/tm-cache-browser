@@ -63,7 +63,11 @@ class Pack {
 
         lastuseIso = lastuse.SubStr(6, 4) + "-" + lastuse.SubStr(3, 2) + "-" + lastuse.SubStr(0, 2)
             + " " + lastuse.SubStr(11, 2) + ":" + lastuse.SubStr(14, 2) + ":00";
-        lastuseUnix = IsoToUnix(lastuseIso);
+        try {
+            lastuseUnix = Time::ParseFormatString("%F %T", lastuseIso);
+        } catch {
+            warn("bad iso format: " + lastuseIso);
+        }
 
         if (root == "shared") {
             path = programDataPath + file;

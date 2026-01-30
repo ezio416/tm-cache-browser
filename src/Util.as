@@ -1,5 +1,3 @@
-SQLite::Database@ timeDB = SQLite::Database(":memory:");
-
 // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
 void EditMap() {
     if (false
@@ -85,7 +83,7 @@ void HoverTooltip(const string&in msg) {
     UI::EndTooltip();
 }
 
-string InsertSeparators(int num) {
+string InsertSeparators(const int num) {
     int abs = Math::Abs(num);
     if (abs < 1000) {
         return tostring(num);
@@ -111,16 +109,6 @@ string InsertSeparators(int num) {
     }
 
     return result;
-}
-
-// courtesy of MisfitMaid
-int64 IsoToUnix(const string&in inTime) {
-    SQLite::Statement@ s = timeDB.Prepare("SELECT unixepoch(?) as x");
-    s.Bind(1, inTime);
-    s.Execute();
-    s.NextRow();
-    s.NextRow();
-    return s.GetColumnInt64("x");
 }
 
 // courtesy of "4GB Cache" - https://github.com/XertroV/tm-4gb-cache
