@@ -1,6 +1,3 @@
-// c 2024-03-10
-// m 2024-03-10
-
 void RenderDebug() {
     if (!S_Debug) {
         return;

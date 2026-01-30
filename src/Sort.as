@@ -1,6 +1,3 @@
-// c 2024-03-06
-// m 2026-01-20
-
 const uint64 maxFrameTime  = 10;
 bool         sorting       = false;
 uint64       sortLastYield = 0;

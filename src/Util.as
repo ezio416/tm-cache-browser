@@ -1,6 +1,3 @@
-// c 2024-03-06
-// m 2026-01-20
-
 SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
 // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map

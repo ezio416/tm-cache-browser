@@ -1,6 +1,3 @@
-// c 2024-03-10
-// m 2026-01-20
-
 Pack@              archive;
 CPlugFileZip@      archiveFile;
 bool               archiveWindow     = false;

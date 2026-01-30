@@ -1,6 +1,3 @@
-// c 2024-03-06
-// m 2026-01-20
-
 const string[] extensionsArchive = { "7z", "gz", "rar", "tar", "zip" };
 const string[] extensionsAudio   = { "aac", "aiff", "alac", "amr", "flac", "m4a", "m4r", "mp3", "mux", "ogg", "wav", "wma" };
 const string[] extensionsImage   = { "bmp", "dds", "exr", "gif", "heif", "jpeg", "jpg", "tiff", "png", "svg", "tga", "webp" };

@@ -1,6 +1,3 @@
-// c 2024-03-06
-// m 2026-01-27
-
 void Main() {
     developer = Meta::IsDeveloperMode();
     hasEditPermission = Permissions::OpenAdvancedMapEditor();
