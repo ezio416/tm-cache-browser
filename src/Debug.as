@@ -1,4 +1,4 @@
-const UI::TableColumnFlags fixedNoResize = UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize;
+const int fixedNoResize = UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoResize;
 
 void RenderDebug() {
     if (!S_Debug) {
