@@ -4,7 +4,7 @@
 const uint64 maxFrameTime  = 10;
 bool         sorting       = false;
 uint64       sortLastYield = 0;
-SortMethod[] sortMethods   = {SortMethod::LargestFirst};
+SortMethod[] sortMethods   = { SortMethod::LargestFirst };
 
 funcdef int SortFunc(Pack@ p1, Pack@ p2);
 
@@ -24,10 +24,12 @@ int NameAlpha(Pack@ p1, Pack@ p2) {
     string n1 = p1.name.ToLower();
     string n2 = p2.name.ToLower();
 
-    if (n1 < n2)
+    if (n1 < n2) {
         return -1;
-    if (n1 > n2)
+    }
+    if (n1 > n2) {
         return 1;
+    }
     return 0;
 }
 
@@ -59,7 +61,9 @@ int multiSort(Pack@ p1, Pack@ p2) {
         } else {
             result = sortFunctions[sortMethods[i]](p1, p2);
         }
-        if (result != 0) {return result;}
+        if (result != 0) {
+            return result;
+        }
     }
     return 0;
 }
@@ -71,22 +75,26 @@ Pack@[]@ QuickSort(Pack@[]@ arr, int left = 0, int right = -1) {
         yield();
     }
 
-    if (right < 0)
+    if (right < 0) {
         right = arr.Length - 1;
+    }
 
-    if (arr.Length == 0)
+    if (arr.Length == 0) {
         return arr;
+    }
 
     int i = left;
     int j = right;
     Pack@ pivot = arr[(left + right) / 2];
 
     while (i <= j) {
-        while (multiSort(arr[i], pivot) < 0)
+        while (multiSort(arr[i], pivot) < 0) {
             i++;
+        }
 
-        while (multiSort(arr[j], pivot) > 0)
+        while (multiSort(arr[j], pivot) > 0) {
             j--;
+        }
 
         if (i <= j) {
             Pack@ temp = arr[i];
@@ -97,18 +105,21 @@ Pack@[]@ QuickSort(Pack@[]@ arr, int left = 0, int right = -1) {
         }
     }
 
-    if (left < j)
+    if (left < j) {
         arr = QuickSort(arr, left, j);
+    }
 
-    if (i < right)
+    if (i < right) {
         arr = QuickSort(arr, i, right);
+    }
 
     return arr;
 }
 
 void SortPacks() {
-    while (sorting)
+    while (sorting) {
         yield();
+    }
 
     sorting = true;
 
@@ -116,13 +127,13 @@ void SortPacks() {
 
     packsSorted.RemoveRange(0, packsSorted.Length);
 
-    for (uint i = 0; i < packs.Length; i++)
+    for (uint i = 0; i < packs.Length; i++) {
         packsSorted.InsertLast(packs[i]);
+    }
 
     sortLastYield = Time::Now;
 
     packsSorted = QuickSort(packsSorted);
-
 
     trace("sorting packs done!");
 

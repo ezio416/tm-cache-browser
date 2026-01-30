@@ -5,8 +5,14 @@ SQLite::Database@ timeDB = SQLite::Database(":memory:");
 
 // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
 void EditMap() {
-    if (!hasEditPermission || loading || gbx.path.Length == 0 || gbxMap is null)
+    if (false
+        or !hasEditPermission
+        or loading
+        or gbx.path.Length == 0
+        or gbxMap is null
+    ) {
         return;
+    }
 
     loading = true;
 
@@ -21,8 +27,9 @@ void EditMap() {
     const uint64 waitToEditAgain = 5000;
     const uint64 now = Time::Now;
 
-    while (Time::Now - now < waitToEditAgain)
+    while (Time::Now - now < waitToEditAgain) {
         yield();
+    }
 
     loading = false;
 }
@@ -54,54 +61,63 @@ void EditMap() {
 //     loading = false;
 // }
 
-string ForSlash(const string &in path) {
+string ForSlash(const string&in path) {
     return path.Replace("\\", "/");
 }
 
-string GetSizeDynamic(uint size, uint precision = 1) {
+string GetSizeDynamic(const uint size, const uint precision = 1) {
     if (size >= 1073741824) {
         return Text::Format("%." + precision + "f", float(size) / 1073741824.f) + " GiB";
-    } if (size >= 1048576) {
+    }
+    if (size >= 1048576) {
         return Text::Format("%." + precision + "f", float(size) / 1048576.f) + " MiB";
-    } if (size >= 1024) {
+    }
+    if (size >= 1024) {
         return Text::Format("%." + precision + "f", float(size) / 1024.f) + " KiB";
     }
     return tostring(size) + " B";
 }
 
-void HoverTooltip(const string &in msg) {
-    if (!UI::IsItemHovered())
+void HoverTooltip(const string&in msg) {
+    if (!UI::IsItemHovered()) {
         return;
+    }
 
     UI::BeginTooltip();
-        UI::Text(msg);
+    UI::Text(msg);
     UI::EndTooltip();
 }
 
 string InsertSeparators(int num) {
     int abs = Math::Abs(num);
-    if (abs < 1000)
+    if (abs < 1000) {
         return tostring(num);
+    }
 
     string str = tostring(abs);
 
     string result;
 
     for (int i = 0; i < str.Length; i++) {
-        if (i > 0 && (str.Length - i) % 3 == 0)
+        if (true
+            and i > 0
+            and (str.Length - i) % 3 == 0
+        ) {
             result += S_Separator;
+        }
 
         result += str.SubStr(i, 1);
     }
 
-    if (num < 0)
+    if (num < 0) {
         result = "-" + result;
+    }
 
     return result;
 }
 
 // courtesy of MisfitMaid
-int64 IsoToUnix(const string &in inTime) {
+int64 IsoToUnix(const string&in inTime) {
     SQLite::Statement@ s = timeDB.Prepare("SELECT unixepoch(?) as x");
     s.Bind(1, inTime);
     s.Execute();
@@ -129,8 +145,15 @@ uint MeasureFidSizes(CSystemFidsFolder@ folder) {
 
 // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
 void PlayMap() {
-    if (!hasPlayPermission || loading || gbx.path.Length == 0 || gbxMap is null || gbxMap.TMObjective_AuthorTime == uint(-1))
+    if (false
+        or !hasPlayPermission
+        or loading
+        or gbx.path.Length == 0
+        or gbxMap is null
+        or gbxMap.TMObjective_AuthorTime == uint(-1)
+    ) {
         return;
+    }
 
     loading = true;
 
@@ -161,8 +184,9 @@ void PlayMap() {
     const uint64 waitToPlayAgain = 5000;
     const uint64 now = Time::Now;
 
-    while (Time::Now - now < waitToPlayAgain)
+    while (Time::Now - now < waitToPlayAgain) {
         yield();
+    }
 
     loading = false;
 }
@@ -180,8 +204,9 @@ void ReadCacheUsage() {
 }
 
 void ReadChecksumFile() {
-    if (reading)
+    if (reading) {
         return;
+    }
 
     reading = true;
 
@@ -214,12 +239,14 @@ void ReadChecksumFile() {
         while (true) {
             node = node.NextSibling();
             Pack pack(node);
-            if (pack.checksum.Length == 0)
+            if (pack.checksum.Length == 0) {
                 break;
+            }
             packs.InsertLast(pack);
 
-            if (i++ % 10 == 0)
+            if (i++ % 10 == 0) {
                 yield();
+            }
         }
     } else {
         warn("checksum file not found");
@@ -238,15 +265,19 @@ void ReadChecksumFile() {
 
 // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
 void ReturnToMenu() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    auto App = cast<CTrackMania>(GetApp());
 
-    if (App.Network.PlaygroundClientScriptAPI.IsInGameMenuDisplayed)
-        App.Network.PlaygroundInterfaceScriptHandler.CloseInGameMenu(CGameScriptHandlerPlaygroundInterface::EInGameMenuResult::Quit);
+    if (App.Network.PlaygroundClientScriptAPI.IsInGameMenuDisplayed) {
+        App.Network.PlaygroundInterfaceScriptHandler.CloseInGameMenu(
+            CGameScriptHandlerPlaygroundInterface::EInGameMenuResult::Quit
+        );
+    }
 
     App.BackToMainMenu();
 
-    while (!App.ManiaTitleControlScriptAPI.IsReady)
+    while (!App.ManiaTitleControlScriptAPI.IsReady) {
         yield();
+    }
 }
 
 void ScanMapNames() {
@@ -256,19 +287,21 @@ void ScanMapNames() {
         if (packs[i].type == FileType::Map) {
             Pack@ pack = packs[i];
             CSystemFidFile@ fid;
-            if (pack.root == "shared")
+            if (pack.root == "shared") {
                 @fid = Fids::GetProgramData(pack.file);
-            else if (pack.root == "user")
+            } else if (pack.root == "user") {
                 @fid = Fids::GetUser(pack.file);
-            else if (pack.root == "data")
+            } else if (pack.root == "data") {
                 @fid = Fids::GetGame("GameData/" + pack.file);
+            }
 
             if (fid !is null) {
-                @gbxMap = cast<CGameCtnChallenge@>(Fids::Preload(fid));
+                @gbxMap = cast<CGameCtnChallenge>(Fids::Preload(fid));
                 pack.chosenName = gbxMap.MapName;
                 cacheMaps++;
-            } else
+            } else {
                 warn("null fid: " + pack.path);
+            }
 
             now = Time::Now;
             if (now - lastYield > maxFrameTime) {
@@ -277,5 +310,6 @@ void ScanMapNames() {
             }
         }
     }
+
     trace("checking map names done! (" + cacheMaps + " cached maps)");
 }

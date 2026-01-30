@@ -64,20 +64,23 @@ class Pack {
             url = node.Child("url").Content();
         } catch { }
 
-        lastuseIso = lastuse.SubStr(6, 4) + "-" + lastuse.SubStr(3, 2) + "-" + lastuse.SubStr(0, 2) + " " + lastuse.SubStr(11, 2) + ":" + lastuse.SubStr(14, 2) + ":00";
+        lastuseIso = lastuse.SubStr(6, 4) + "-" + lastuse.SubStr(3, 2) + "-" + lastuse.SubStr(0, 2)
+            + " " + lastuse.SubStr(11, 2) + ":" + lastuse.SubStr(14, 2) + ":00";
         lastuseUnix = IsoToUnix(lastuseIso);
 
-        if (root == "shared")
+        if (root == "shared") {
             path = programDataPath + file;
-        else if (root == "user")
+        } else if (root == "user") {
             path = ForSlash(IO::FromUserGameFolder(file));
-        else if (root == "data")
+        } else if (root == "data") {
             path = ForSlash(IO::FromAppFolder("GameData")) + "/" + file;
+        }
 
         string[]@ parts = file.Split(".");
 
-        if (parts.Length == 0)
+        if (parts.Length == 0) {
             return;
+        }
 
         extension = parts[parts.Length - 1].ToLower();
 
@@ -86,55 +89,70 @@ class Pack {
 
             parts = name.Split("/");
 
-            if (parts.Length > 0 && parts[0] == "Skins") {
+            if (true
+                and parts.Length > 0
+                and parts[0] == "Skins"
+            ) {
                 if (parts.Length > 1) {
-                    if (parts[1] == "Models" && parts.Length > 2 && parts[2] == "CarSport")
+                    if (true
+                        and parts[1] == "Models"
+                        and parts.Length > 2
+                        and parts[2] == "CarSport"
+                    ) {
                         type = FileType::CarSkin;
-                    else if (parts[1] == "Stadium" && parts.Length > 2 && parts[2] == "Mod")
+                    } else if (true
+                        and parts[1] == "Stadium"
+                        and parts.Length > 2
+                        and parts[2] == "Mod"
+                    ) {
                         type = FileType::MapMod;
+                    }
                 }
             }
-        } else if (extensionsAudio.Find(extension) > -1)
+        } else if (extensionsAudio.Find(extension) > -1) {
             type = FileType::Audio;
-        else if (extension == "gbx") {
+        } else if (extension == "gbx") {
             type = FileType::GameBox;
 
-            if (parts.Length == 1)
+            if (parts.Length == 1) {
                 return;
+            }
 
             string gbxType = parts[parts.Length - 2].ToLower();
 
-            if (gbxType == "block")
+            if (gbxType == "block") {
                 type = FileType::Block;
-            else if (gbxType == "fidcache")
+            } else if (gbxType == "fidcache") {
                 type = FileType::FidCache;
-            else if (gbxType == "ghost")
+            } else if (gbxType == "ghost") {
                 type = FileType::Ghost;
-            else if (gbxType == "item")
+            } else if (gbxType == "item") {
                 type = FileType::Item;
-            else if (gbxType == "macroblock")
+            } else if (gbxType == "macroblock") {
                 type = FileType::Macroblock;
-            else if (gbxType == "map")
+            } else if (gbxType == "map") {
                 type = FileType::Map;
-            else if (gbxType == "mat")
+            } else if (gbxType == "mat") {
                 type = FileType::Material;
-            else if (gbxType == "mesh")
+            } else if (gbxType == "mesh") {
                 type = FileType::Mesh;
-            else if (gbxType == "profile")
+            } else if (gbxType == "profile") {
                 type = FileType::Profile;
-            else if (gbxType == "replay")
+            } else if (gbxType == "replay") {
                 type = FileType::Replay;
-            else if (gbxType == "scores")
+            } else if (gbxType == "scores") {
                 type = FileType::Scores;
-            else if (gbxType == "systemconfig")
+            } else if (gbxType == "systemconfig") {
                 type = FileType::SystemConfig;
+            }
 
-        } else if (extensionsImage.Find(extension) > -1)
+        } else if (extensionsImage.Find(extension) > -1) {
             type = FileType::Image;
-        else if (extensionsText.Find(extension) > -1)
+        } else if (extensionsText.Find(extension) > -1) {
             type = FileType::Text;
-        else if (extensionsVideo.Find(extension) > -1)
+        } else if (extensionsVideo.Find(extension) > -1) {
             type = FileType::Video;
+        }
     }
 
     void Delete() {
@@ -149,8 +167,9 @@ class Pack {
             } catch {
                 error("error deleting file (" + path + "): " + getExceptionInfo());
             }
-        } else
+        } else {
             warn("file not found (it's okay, tried to delete anyway): " + path);
+        }
 
         try {
             IO::File fileRead(checksumFile, IO::FileMode::Read);
@@ -190,8 +209,9 @@ class Pack {
     }
 
     void PermaCache() {
-        if (type != FileType::MapMod)
+        if (type != FileType::MapMod) {
             return;
+        }
 
         if (!IO::FileExists(path)) {
             warn("file not found: " + path);
@@ -229,9 +249,9 @@ class Pack {
 
             const string oldXml = GetOldXml();
 
-            if (xml.Contains(oldXml))
+            if (xml.Contains(oldXml)) {
                 xml = xml.Replace(oldXml, "");
-            else {
+            } else {
                 warn("oldXml not found in xml - old cache location remains and will probably cause a game crash: " + path);
                 permaCacheIssue = true;
             }

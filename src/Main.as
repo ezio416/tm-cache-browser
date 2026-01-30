@@ -10,44 +10,58 @@ void Main() {
     cachePath = programDataPath + "Cache/";
     checksumFile = programDataPath + "checksum.txt";
 
-    if (S_AutoRead)
+    if (S_AutoRead) {
         startnew(ReadChecksumFile);
+    }
 }
 
 void RenderMenu() {
-    if (UI::MenuItem(title, "", S_Enabled))
+    if (UI::MenuItem(title, "", S_Enabled)) {
         S_Enabled = !S_Enabled;
+    }
 }
 
 void Render() {
-    if (
-        !S_Enabled
-        || (S_HideWithGame && !UI::IsGameUIVisible())
-        || (S_HideWithOP && !UI::IsOverlayShown())
-    )
+    if (false
+        or !S_Enabled
+        or (true
+            and S_HideWithGame
+            and !UI::IsGameUIVisible()
+        )
+        or (true
+            and S_HideWithOP
+            and !UI::IsOverlayShown()
+        )
+    ) {
         return;
+    }
 
     UI::Begin(title, S_Enabled, UI::WindowFlags::None);
         UI::BeginDisabled(reading);
-        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Packs)"))
+        if (UI::Button(Icons::File + " Read Checksum File (" + packsSorted.Length + " Packs)")) {
             startnew(ReadChecksumFile);
+        }
         UI::EndDisabled();
 
         UI::SameLine();
-        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeDynamic(cacheUsage) + ")"))
+        if (UI::Button(Icons::Refresh + " Refresh Cache Usage (" + GetSizeDynamic(cacheUsage) + ")")) {
             startnew(ReadCacheUsage);
+        }
 
         UI::SameLine();
-        if (UI::Button(Icons::ExternalLinkSquare + " Open Cache Folder"))
+        if (UI::Button(Icons::ExternalLinkSquare + " Open Cache Folder")) {
             OpenExplorerPath(cachePath);
+        }
 
         UI::SameLine();
-        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania User Folder"))
+        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania User Folder")) {
             OpenExplorerPath(IO::FromUserGameFolder(""));
+        }
 
         UI::SameLine();
-        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder"))
+        if (UI::Button(Icons::ExternalLinkSquare + " Open Trackmania Game Folder")) {
             OpenExplorerPath(IO::FromAppFolder(""));
+        }
 
         UI::SetNextItemWidth(100);
         if (UI::BeginCombo('filter type', tostring(filterType), UI::ComboFlags::None)) {
@@ -65,7 +79,10 @@ void Render() {
         UI::SameLine();
         search = UI::InputText("search names", search);
 
-        if (search.Length > 0 || filterType != FileType::None) {
+        if (false
+            or search.Length > 0
+            or filterType != FileType::None
+        ) {
             UI::SameLine();
             if (UI::Button(Icons::Times + " Clear Filters")) {
                 search = "";
@@ -90,10 +107,12 @@ void Render() {
 
 void Table_Main() {
     int columns = 5;
-    if (developer)
+    if (developer) {
         columns++;
-    if (S_AllowDelete)
+    }
+    if (S_AllowDelete) {
         columns++;
+    }
 
     if (UI::BeginTable("##table-main", columns, UI::TableFlags::RowBg | UI::TableFlags::ScrollY | UI::TableFlags::Sortable)) {
         UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
@@ -103,31 +122,43 @@ void Table_Main() {
         UI::TableSetupColumn("size", UI::TableColumnFlags::WidthFixed, scale * 75.0f);
         UI::TableSetupColumn("last use (UTC)", UI::TableColumnFlags::WidthFixed, scale * 120.0f);
         UI::TableSetupColumn("path", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 100.0f);
-        if (developer)
+        if (developer) {
             UI::TableSetupColumn("nod", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 110.0f);
-        if (S_AllowDelete)
+        }
+        if (S_AllowDelete) {
             UI::TableSetupColumn("delete", UI::TableColumnFlags::WidthFixed | UI::TableColumnFlags::NoSort, scale * 75.0f);
+        }
         UI::TableSetupColumn("name");
         UI::TableHeadersRow();
 
         UI::TableSortSpecs@ tableSpecs = UI::TableGetSortSpecs();
 
-        if (tableSpecs !is null && (tableSpecs.Dirty || dirty)) {
+        if (true
+            and tableSpecs !is null
+            and (false
+                or tableSpecs.Dirty
+                or dirty
+            )
+        ) {
             UI::TableColumnSortSpecs[]@ colSpecs = tableSpecs.Specs;
 
-            if (colSpecs !is null && colSpecs.Length > 0) {
+            if (true
+                and colSpecs !is null
+                and colSpecs.Length > 0
+            ) {
                 bool ascending = colSpecs[0].SortDirection == UI::SortDirection::Ascending;
 
                 SortMethod newMethod = SortMethod::None;
 
-                if (colSpecs[0].ColumnIndex == 0)
+                if (colSpecs[0].ColumnIndex == 0) {
                     newMethod = ascending ? SortMethod::TypeAlpha : SortMethod::TypeAlphaRev;
-                else if (colSpecs[0].ColumnIndex == 1)
+                } else if (colSpecs[0].ColumnIndex == 1) {
                     newMethod = ascending ? SortMethod::SmallestFirst : SortMethod::LargestFirst;
-                else if (colSpecs[0].ColumnIndex == 2)
+                } else if (colSpecs[0].ColumnIndex == 2) {
                     newMethod = ascending ? SortMethod::OldestFirst : SortMethod::NewestFirst;
-                else if (colSpecs[0].ColumnIndex == columns - 1)
+                } else if (colSpecs[0].ColumnIndex == columns - 1) {
                     newMethod = ascending ? SortMethod::NameAlpha : SortMethod::NameAlphaRev;
+                }
 
                 if (newMethod != SortMethod::None) {
                     int i;
@@ -155,10 +186,22 @@ void Table_Main() {
         for (uint i = 0; i < packsSorted.Length; i++) {
             Pack@ pack = packsSorted[i];
 
-            if ((searchLower.Length == 0 || pack.name.ToLower().Contains(searchLower) ||
-                (pack.chosenName != "" && pack.chosenName.ToLower().Contains(searchLower))) &&
-                (filterType == FileType::None || pack.type == filterType))
+            if (true
+                and (false
+                    or searchLower.Length == 0
+                    or pack.name.ToLower().Contains(searchLower)
+                    or (true
+                        and pack.chosenName != ""
+                        and pack.chosenName.ToLower().Contains(searchLower)
+                    )
+                )
+                and (false
+                    or filterType == FileType::None
+                    or pack.type == filterType
+                )
+            ) {
                 packsFiltered.InsertLast(pack);
+            }
         }
 
         searchResults = packsFiltered.Length;
@@ -182,37 +225,51 @@ void Table_Main() {
                 HoverTooltip(tostring(pack.lastuseUnix));
 
                 UI::TableNextColumn();
-                if (pack.path.Length > 0 && UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.path, false))
+                if (true
+                    and pack.path.Length > 0
+                    and UI::Selectable(Icons::Clipboard + " Copy Path##" + pack.path, false)
+                ) {
                     IO::SetClipboard(pack.path);
+                }
                 HoverTooltip(pack.path);
 
                 if (developer) {
                     UI::TableNextColumn();
-                    if (pack.path.Length > 0 && UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.path, false)) {
+                    if (true
+                        and pack.path.Length > 0
+                        and UI::Selectable(Icons::ExternalLink + " Explore Nod##" + pack.path, false)
+                    ) {
                         CSystemFidFile@ fid;
 
-                        if (pack.root == "shared")
+                        if (pack.root == "shared") {
                             @fid = Fids::GetProgramData(pack.file);
-                        else if (pack.root == "user")
+                        } else if (pack.root == "user") {
                             @fid = Fids::GetUser(pack.file);
-                        else if (pack.root == "data")
+                        } else if (pack.root == "data") {
                             @fid = Fids::GetGame("GameData/" + pack.file);
+                        }
 
                         if (fid !is null) {
                             CMwNod@ nod = Fids::Preload(fid);
-                            if (nod !is null)
+                            if (nod !is null) {
                                 ExploreNod(nod);
-                            else
+                            } else {
                                 warn("null nod: " + pack.path);
-                        } else
+                            }
+                        } else {
                             warn("null fid: " + pack.path);
+                        }
                     }
                 }
 
                 if (S_AllowDelete) {
                     UI::TableNextColumn();
-                    if (pack.root == "shared" && UI::Selectable(Icons::Trash + " Delete##" + pack.path, false))
+                    if (true
+                        and pack.root == "shared"
+                        and UI::Selectable(Icons::Trash + " Delete##" + pack.path, false)
+                    ) {
                         @deleteQueued = pack;
+                    }
                 }
 
                 UI::TableNextColumn();
@@ -225,17 +282,19 @@ void Table_Main() {
 
                             CSystemFidFile@ fid;
 
-                            if (archive.root == "shared")
+                            if (archive.root == "shared") {
                                 @fid = Fids::GetProgramData(archive.file);
-                            else if (archive.root == "user")
+                            } else if (archive.root == "user") {
                                 @fid = Fids::GetUser(archive.file);
-                            else if (archive.root == "data")
+                            } else if (archive.root == "data") {
                                 @fid = Fids::GetGame("GameData/" + archive.file);
+                            }
 
-                            if (fid !is null)
-                                @archiveFile = cast<CPlugFileZip@>(Fids::Preload(fid));
-                            else
+                            if (fid !is null) {
+                                @archiveFile = cast<CPlugFileZip>(Fids::Preload(fid));
+                            } else {
                                 warn("null fid: " + archive.path);
+                            }
                         }
                         break;
 
@@ -272,15 +331,16 @@ void Table_Main() {
 
                             CSystemFidFile@ fid;
 
-                            if (pack.file.StartsWith("Cache"))
+                            if (pack.file.StartsWith("Cache")) {
                                 @fid = Fids::GetProgramData(pack.file);
-                            else
+                            } else {
                                 @fid = Fids::GetUser(pack.file);
+                            }
 
-                            CPlugFileImg@ img = cast<CPlugFileImg@>(Fids::Preload(fid));
-                            if (img !is null)
+                            auto img = cast<CPlugFileImg>(Fids::Preload(fid));
+                            if (img !is null) {
                                 imageSize = vec2(float(img.Width), float(img.Height));
-                            else {
+                            } else {
                                 warn("null image from fid: " + pack.path);
                                 imageSize = vec2(512.0f, 512.0f);
                             }
@@ -294,18 +354,20 @@ void Table_Main() {
 
                             CSystemFidFile@ fid;
 
-                            if (gbx.root == "shared")
+                            if (gbx.root == "shared") {
                                 @fid = Fids::GetProgramData(gbx.file);
-                            else if (gbx.root == "user")
+                            } else if (gbx.root == "user") {
                                 @fid = Fids::GetUser(gbx.file);
-                            else if (gbx.root == "data")
+                            } else if (gbx.root == "data") {
                                 @fid = Fids::GetGame("GameData/" + gbx.file);
+                            }
 
                             if (fid !is null) {
-                                if (gbx.type == FileType::Map)
-                                    @gbxMap = cast<CGameCtnChallenge@>(Fids::Preload(fid));
-                                else
-                                    @gbxGhost = cast<CGameCtnGhost@>(Fids::Preload(fid));
+                                if (gbx.type == FileType::Map) {
+                                    @gbxMap = cast<CGameCtnChallenge>(Fids::Preload(fid));
+                                } else {
+                                    @gbxGhost = cast<CGameCtnGhost>(Fids::Preload(fid));
+                                }
                             } else
                                 warn("null fid: " + gbx.path);
                         }
@@ -340,8 +402,9 @@ void Table_Main() {
 }
 
 void RenderArchivePreview() {
-    if (archive is null)
+    if (archive is null) {
         return;
+    }
 
     archiveWindow = true;
 
@@ -377,27 +440,30 @@ void RenderArchivePreview() {
 
             string rootFolder;
 
-            if (archive.root == "shared")
+            if (archive.root == "shared") {
                 rootFolder = cachePath;
-            else if (archive.root == "user")
+            } else if (archive.root == "user") {
                 rootFolder = ForSlash(IO::FromUserGameFolder(""));
-            else if (archive.root == "data")
+            } else if (archive.root == "data") {
                 rootFolder = ForSlash(IO::FromAppFolder("GameData/"));
+            }
 
             UI::TableNextRow();
             UI::TableNextColumn();
             UI::Text("root");
             UI::TableNextColumn();
-            if (UI::Selectable(archive.root + " (" + rootFolder + ")", false))
+            if (UI::Selectable(archive.root + " (" + rootFolder + ")", false)) {
                 OpenExplorerPath(rootFolder);
+            }
             HoverTooltip(Icons::ExternalLinkSquare + " Open Folder");
 
             UI::TableNextRow();
             UI::TableNextColumn();
             UI::Text("path");
             UI::TableNextColumn();
-            if (UI::Selectable(archive.path, false))
+            if (UI::Selectable(archive.path, false)) {
                 IO::SetClipboard(archive.path);
+            }
             HoverTooltip(Icons::Clipboard + " Copy");
 
             if (archiveFile !is null) {
@@ -418,12 +484,18 @@ void RenderArchivePreview() {
             UI::EndTable();
         }
 
-    if (archive.permaCached || (archive.root == "shared" && archive.type == FileType::MapMod)) {
+    if (false
+        or archive.permaCached
+        or (true
+            and archive.root == "shared"
+            and archive.type == FileType::MapMod
+        )
+    ) {
         UI::Separator();
 
-        if (archive.permaCached)
+        if (archive.permaCached) {
             UI::TextWrapped("\\$FF0File has been permanently cached.");
-        else {
+        } else {
             if (UI::Button("Permanently Cache (Move to " + ForSlash(IO::FromUserGameFolder("")) + ")"))
                 archive.PermaCache();
         }
@@ -431,12 +503,14 @@ void RenderArchivePreview() {
         if (archive.permaCacheIssue) {
             UI::TextWrapped("\\$FA0There was a problem permanently caching the file. You should check the Openplanet log, restart your game, and try again. If the problem persists, please open a GitHub issue and include your log:");
 
-            if (UI::Button(Icons::Github + " Issues"))
+            if (UI::Button(Icons::Github + " Issues")) {
                 OpenBrowserURL("https://github.com/ezio416/tm-cache-browser/issues");
+            }
 
             UI::SameLine();
-            if (UI::Button(Icons::ExternalLinkSquare + " Open Openplanet Folder"))
+            if (UI::Button(Icons::ExternalLinkSquare + " Open Openplanet Folder")) {
                 OpenExplorerPath(IO::FromDataFolder(""));
+            }
         }
     }
 
@@ -449,16 +523,18 @@ void RenderArchivePreview() {
 }
 
 void RenderAudioPreview() {
-    if (audio is null)
+    if (audio is null) {
         return;
+    }
 
     audioWindow = true;
 
     if (audioLoaded is null) {
         @audioLoaded = Audio::Play(audio, 0.5f);
 
-        if (audioLoaded !is null)
+        if (audioLoaded !is null) {
             audioLoaded.Pause();
+        }
     }
 
     UI::Begin(title + " (" + audioExtension + " Audio)###" + title + "-audio", audioWindow, UI::WindowFlags::AlwaysAutoResize);
@@ -474,34 +550,43 @@ void RenderAudioPreview() {
 
             const float gain = audioLoaded.GetGain();
             const float newGain = UI::SliderFloat("##audio-gain", gain, 0.0f, 1.0f, "Gain: %.3f", UI::SliderFlags::NoInput);
-            if (gain != newGain)
+            if (gain != newGain) {
                 audioLoaded.SetGain(newGain);
+            }
 
             if (audioLoaded.IsPaused()) {
-                if (UI::Button("Play"))
+                if (UI::Button("Play")) {
                     audioLoaded.Play();
+                }
             } else {
-                if (UI::Button("Pause"))
+                if (UI::Button("Pause")) {
                     audioLoaded.Pause();
+                }
             }
-        } else
+        } else {
             UI::Text(audioExtension + " audio file not supported");
+        }
 
     UI::End();
 
     if (!audioWindow) {
         @audio = null;
 
-        if (audioLoaded !is null && !audioLoaded.IsPaused())
+        if (true
+            and audioLoaded !is null
+            and !audioLoaded.IsPaused()
+        ) {
             audioLoaded.Pause();
+        }
 
         @audioLoaded = null;
     }
 }
 
 void RenderGbxPreview() {
-    if (gbx is null)
+    if (gbx is null) {
         return;
+    }
 
     gbxWindow = true;
 
@@ -510,7 +595,16 @@ void RenderGbxPreview() {
 
         UI::Separator();
 
-        if ((gbx.type == FileType::Map && gbxMap !is null) || (gbx.type == FileType::Replay && gbxGhost !is null)) {
+        if (false
+            or (true
+                and gbx.type == FileType::Map
+                and gbxMap !is null
+            )
+            or (true
+                and gbx.type == FileType::Replay
+                and gbxGhost !is null
+            )
+        ) {
             if (UI::BeginTable("##table-archive", 2, UI::TableFlags::RowBg)) {
                 UI::PushStyleColor(UI::Col::TableRowBgAlt, rowBgAltColor);
 
@@ -521,32 +615,36 @@ void RenderGbxPreview() {
                     UI::TableNextColumn();
                     UI::Text("name");
                     UI::TableNextColumn();
-                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName) + '##0', false))
+                    if (UI::Selectable(Text::StripFormatCodes(gbxMap.MapName) + '##0', false)) {
                         IO::SetClipboard(Text::StripFormatCodes(gbxMap.MapName));
+                    }
                     HoverTooltip(Icons::Clipboard + " Copy");
 
                     UI::TableNextRow();
                     UI::TableNextColumn();
                     UI::Text("name (color)");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.MapName + '##1', false))
+                    if (UI::Selectable(gbxMap.MapName + '##1', false)) {
                         IO::SetClipboard(gbxMap.MapName);
+                    }
                     HoverTooltip(Icons::Clipboard + " Copy");
 
                     UI::TableNextRow();
                     UI::TableNextColumn();
                     UI::Text("comments");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.Comments + '##2', false))
+                    if (UI::Selectable(gbxMap.Comments + '##2', false)) {
                         IO::SetClipboard(gbxMap.Comments);
+                    }
                     HoverTooltip(Icons::Clipboard + " Copy");
 
                     UI::TableNextRow();
                     UI::TableNextColumn();
                     UI::Text("map UID");
                     UI::TableNextColumn();
-                    if (UI::Selectable(gbxMap.EdChallengeId + '##3', false))
+                    if (UI::Selectable(gbxMap.EdChallengeId + '##3', false)) {
                         IO::SetClipboard(gbxMap.EdChallengeId);
+                    }
                     HoverTooltip(Icons::Clipboard + " Copy");
 
                     UI::TableNextRow();
@@ -622,16 +720,18 @@ void RenderGbxPreview() {
                         UI::TableNextColumn();
                         UI::Text("mod name");
                         UI::TableNextColumn();
-                        if (UI::Selectable(gbxMap.ModPackDesc.Name + '##4', false))
+                        if (UI::Selectable(gbxMap.ModPackDesc.Name + '##4', false)) {
                             IO::SetClipboard(gbxMap.ModPackDesc.Name);
+                        }
                         HoverTooltip(Icons::Clipboard + " Copy");
 
                         UI::TableNextRow();
                         UI::TableNextColumn();
                         UI::Text("mod URL");
                         UI::TableNextColumn();
-                        if (UI::Selectable(gbxMap.ModPackDesc.Url + '##5', false))
+                        if (UI::Selectable(gbxMap.ModPackDesc.Url + '##5', false)) {
                             IO::SetClipboard(gbxMap.ModPackDesc.Url);
+                        }
                         HoverTooltip(Icons::Clipboard + " Copy");
                     }
                 } else {
@@ -669,21 +769,33 @@ void RenderGbxPreview() {
                 UI::PopStyleColor();
                 UI::EndTable();
             }
-        } else
+        } else {
             UI::Text("\\$FF0GameBox nod is null!");
+        }
 
-        if (gbx.type == FileType::Map && gbxMap !is null) {
-            UI::BeginDisabled(loading || gbx.root != "user");
-                UI::BeginDisabled(!hasPlayPermission || gbxMap.TMObjective_AuthorTime == uint(-1));
-                    if (UI::Button(Icons::Play + " Play"))
-                        startnew(PlayMap);
-                UI::EndDisabled();
+        if (true
+            and gbx.type == FileType::Map
+            and gbxMap !is null
+        ) {
+            UI::BeginDisabled(false
+                or loading
+                or gbx.root != "user"
+            );
+            UI::BeginDisabled(false
+                or !hasPlayPermission
+                or gbxMap.TMObjective_AuthorTime == uint(-1)
+            );
+            if (UI::Button(Icons::Play + " Play")) {
+                startnew(PlayMap);
+            }
+            UI::EndDisabled();
 
-                UI::SameLine();
-                UI::BeginDisabled(!hasEditPermission);
-                    if (UI::Button(Icons::Pencil + " Edit"))
-                        startnew(EditMap);
-                UI::EndDisabled();
+            UI::SameLine();
+            UI::BeginDisabled(!hasEditPermission);
+            if (UI::Button(Icons::Pencil + " Edit")) {
+                startnew(EditMap);
+            }
+            UI::EndDisabled();
             UI::EndDisabled();
         }
         // not working - can't load from cache folder, replays in user folder aren't cached?
@@ -696,13 +808,15 @@ void RenderGbxPreview() {
 
         UI::End();
 
-    if (!gbxWindow)
+    if (!gbxWindow) {
         @gbx = null;
+    }
 }
 
 void RenderImagePreview() {
-    if (image is null)
+    if (image is null) {
         return;
+    }
 
     imageWindow = true;
 
@@ -714,21 +828,23 @@ void RenderImagePreview() {
         if (imageExtension == "DDS") {
             UI::Text("DDS image file not supported");
             UI::Dummy(imageSize);
-        } else if (image !is null)
+        } else if (image !is null) {
             UI::Image(image, imageSize);
-        else {
+        } else {
             UI::Text(imageExtension + " image file not supported");
         }
 
     UI::End();
 
-    if (!imageWindow)
+    if (!imageWindow) {
         @image = null;
+    }
 }
 
 void RenderTextPreview() {
-    if (text.Length == 0)
+    if (text.Length == 0) {
         return;
+    }
 
     textWindow = true;
 
@@ -740,13 +856,15 @@ void RenderTextPreview() {
         UI::TextWrapped(text);
     UI::End();
 
-    if (!textWindow)
+    if (!textWindow) {
         text = "";
+    }
 }
 
 void RenderDeleteConfirmation() {
-    if (deleteQueued is null)
+    if (deleteQueued is null) {
         return;
+    }
 
     deleteWindow = true;
 
@@ -759,17 +877,22 @@ void RenderDeleteConfirmation() {
 
         UI::Text("Are you sure you want to delete this cached file? \\$F40THIS IS PERMANENT!");
 
-        if (UI::ButtonColored("YES", 0.4f, 1.0f, 0.8f, vec2(scale * 50.0f, scale * 30.0f)))
+        if (UI::ButtonColored("YES", 0.4f, 1.0f, 0.8f, vec2(scale * 50.0f, scale * 30.0f))) {
             delete = true;
+        }
 
         UI::SameLine();
-        if (UI::ButtonColored("NO", 0.0f, 1.0f, 0.8f, vec2(scale * 370.0f, scale * 30.0f)))
+        if (UI::ButtonColored("NO", 0.0f, 1.0f, 0.8f, vec2(scale * 370.0f, scale * 30.0f))) {
             deleteWindow = false;
+        }
+
     UI::End();
 
-    if (delete)
+    if (delete) {
         deleteQueued.Delete();
+    }
 
-    if (!deleteWindow)
+    if (!deleteWindow) {
         @deleteQueued = null;
+    }
 }
