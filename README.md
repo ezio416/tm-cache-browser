@@ -5,7 +5,7 @@
 
 # Cache Browser
 
-Lets you easily browse the files in Trackmania's cache. Also preview some files (currently only images) right in-game!
+Lets you easily browse the files in Trackmania's cache. Also preview some files right in-game!
 
 For developers, you may also explore nods of cached items.
 
